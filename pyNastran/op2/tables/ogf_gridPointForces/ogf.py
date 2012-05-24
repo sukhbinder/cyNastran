@@ -1,3 +1,27 @@
+## GNU Lesser General Public License
+## 
+## Program pyNastran - a python interface to NASTRAN files
+## Copyright (C) 2011-2012  Steven Doyle, Al Danial
+## 
+## Authors and copyright holders of pyNastran
+## Steven Doyle <mesheb82@gmail.com>
+## Al Danial    <al.danial@gmail.com>
+## 
+## This file is part of pyNastran.
+## 
+## pyNastran is free software: you can redistribute it and/or modify
+## it under the terms of the GNU Lesser General Public License as published by
+## the Free Software Foundation, either version 3 of the License, or
+## (at your option) any later version.
+## 
+## pyNastran is distributed in the hope that it will be useful,
+## but WITHOUT ANY WARRANTY; without even the implied warranty of
+## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+## GNU General Public License for more details.
+## 
+## You should have received a copy of the GNU Lesser General Public License
+## along with pyNastran.  If not, see <http://www.gnu.org/licenses/>.
+## 
 import sys
 import copy
 from numpy import array
@@ -55,44 +79,29 @@ class OGF(object):
         #self.printBlock(data) # on
         ## assuming tCode=1
         if self.analysisCode==1:   # statics / displacement / heat flux
-            #self.extractDt = self.extractInt
-            self.applyDataCodeValue('dataNames',['lsdvmn'])
-            self.setNullNonlinearFactor()
+            self.extractDt = self.extractInt
         elif self.analysisCode==2: # real eigenvalues
-            self.addDataParameter(data,'mode','i',5)   ## mode number
-            self.applyDataCodeValue('dataNames',['mode'])
-        #elif self.analysisCode==3: # differential stiffness
-            #self.lsdvmn = self.getValues(data,'i',5) ## load set number
-            #self.extractDt = self.extractInt
-        #elif self.analysisCode==4: # differential stiffness
-            #self.extractDt = self.extractInt
+            self.extractDt = self.extractInt
+        elif self.analysisCode==3: # differential stiffness
+            self.extractDt = self.extractInt
+        elif self.analysisCode==4: # differential stiffness
+            self.extractDt = self.extractInt
         elif self.analysisCode==5:   # frequency
-            self.addDataParameter(data,'freq','f',5)   ## frequency
-            self.applyDataCodeValue('dataNames',['freq'])
+            self.extractDt = self.extractFloat
         elif self.analysisCode==6: # transient
-            self.addDataParameter(data,'time','f',5)   ## time step
-            self.applyDataCodeValue('dataNames',['time'])
-        #elif self.analysisCode==7: # pre-buckling
-            #self.extractDt = self.extractInt
-            #self.applyDataCodeValue('dataNames',['lsdvmn'])
-        #elif self.analysisCode==8: # post-buckling
-            #self.extractDt = self.extractInt
-            #self.applyDataCodeValue('dataNames',['lsdvmn','eigr'])
+            self.extractDt = self.extractFloat
+        elif self.analysisCode==7: # pre-buckling
+            self.extractDt = self.extractInt
+        elif self.analysisCode==8: # post-buckling
+            self.extractDt = self.extractInt
         elif self.analysisCode==9: # complex eigenvalues
-            self.addDataParameter(data,'mode','i',5)         ## mode number
-            #self.addDataParameter(data,'eigr','f',6,False)   ## real eigenvalue
-            self.applyDataCodeValue('dataNames',['mode','eigr','eigi'])
+            self.extractDt = self.extractInt
         elif self.analysisCode==10: # nonlinear statics
-            self.addDataParameter(data,'loadFactor','f',5)   ## load factor
-            self.applyDataCodeValue('dataNames',['loadFactor'])
-        #elif self.analysisCode==11: # old geometric nonlinear statics
-            #self.extractDt = self.extractInt
-            #self.applyDataCodeValue('dataNames',['lsdvmn'])
+            self.extractDt = self.extractFloat
+        elif self.analysisCode==11: # old geometric nonlinear statics
+            self.extractDt = self.extractInt
         elif self.analysisCode==12: # contran ? (may appear as aCode=6)  --> straight from DMAP...grrr...
-            self.addDataParameter(data,'time','f',5)   ## time step
-            self.applyDataCodeValue('dataNames',['time'])
-            #self.extractDt = self.extractInt
-            #self.applyDataCodeValue('dataNames',['lsdvmn'])
+            self.extractDt = self.extractInt
         else:
             raise InvalidAnalysisCodeError('invalid analysisCode...analysisCode=%s' %(self.analysisCode))
 
@@ -103,17 +112,16 @@ class OGF(object):
         #self.printBlock(data)
         self.readTitle()
 
-        # this may be a really good idea...
-    #def extractDt(self):
-        #pass
-    #def extractInt(self):
-        #return 'i',self.scaleEid
-    #def extractFloat(self):
-        #return 'f',self.scaleDt
-    #def scaleEid(self,eid):
-        #return (eid-self.deviceCode)//10
-    #def scaleDt(self,dt):
-        #return dt
+    def extractDt(self):
+        pass
+    def extractInt(self):
+        return 'i',self.scaleEid
+    def extractFloat(self):
+        return 'f',self.scaleDt
+    def scaleEid(self,eid):
+        return (eid-self.deviceCode)//10
+    def scaleDt(self,dt):
+        return dt
 
     def readOGF_Data(self):
         #print "self.analysisCode=%s tableCode(1)=%s thermal(23)=%g" %(self.analysisCode,self.tableCode,self.thermal)
@@ -122,85 +130,103 @@ class OGF(object):
         #if self.thermal==2:
         #    self.skipOES_Element()
         #print "tfsCode=%s" %(tfsCode)
-        
-        if self.tableCode==19: # grid point forces
-            assert self.tableName in ['OGPFB1'],'tableName=%s tableCode=%s' %(self.tableName,self.tableCode)
-            self.readOGF_Data_table19()
+        # displacement
+        if   tfsCode==[19,1,0]:
+            self.readOGF_Data_table19_format1_sort0()
+        elif tfsCode==[19,1,1]:
+            self.readOGF_Data_table19_format1_sort1()
+        elif tfsCode==[19,2,0]:
+            self.readOGF_Data_table19_format2_sort0()
+        #elif tfsCode==[19,2,1]:
+        #    self.readOGF_Data_table19_format2_sort1()
+        #elif tfsCode==[19,2,2]:
+        #    self.readOGF_Data_table19_format2_sort2()
+        #elif tfsCode==[19,3,0]:
+        #    self.readOGF_Data_table19_format3_sort0()
+        #elif tfsCode==[19,3,1]:
+        #    self.readOGF_Data_table19_format3_sort1()
+        #elif tfsCode==[19,3,2]:
+        #    self.readOGF_Data_table19_format3_sort2()
+
         else:
-            #self.log.debug('skipping approach/table/format/sortCode=%s on %s-OGF table' %(self.tableName,self.atfsCode))
-            print self.codeInformation()
-            #self.skipOES_Element()
-            raise NotImplementedError('bad approach/table/format/sortCode=%s on %s-OGF table' %(self.atfsCode,self.tableName))
+            #print "***start skipping***"
+            self.log.debug('skipping approach/table/format/sortCode=%s on %s-OGF table' %(self.tableName,self.atfsCode))
+            #print self.codeInformation()
+            self.skipOES_Element()
+            #print "***end skipping***"
+            #raise NotImplementedError('bad approach/table/format/sortCode=%s on %s-OGF table' %(self.atfsCode,self.tableName,))
         ###
         #print self.obj
 
-
-    def readOGF_Data_table19(self): # grid point forces
-        isSort1 = self.isSort1()
-        if self.numWide==10:  # real/random
-            #if self.thermal==0:
-            self.createTransientObject(self.gridPointForces,gridPointForcesObject) # real
-            #else:
-                #raise NotImplementedError(self.codeInformation())
-            #self.handleResultsBuffer3(self.OUG_RealTable)
+    def readOGF_Data_table19_format1_sort0(self): # grid point forces
+        #print self.codeInformation()
+        if self.numWide==10:
+            self.createTransientObject(self.gridPointForces,gridPointForcesObject)
             self.readOGF_numWide10()
-        elif self.numWide==16:  # real/imaginary or mag/phase
-            #if self.thermal==0:
-            self.createTransientObject(self.gridPointForces,complexGridPointForcesObject) # complex
-            #else:
-                #raise NotImplementedError(self.codeInformation())
+        elif self.numWide==16:
+            self.createTransientObject(self.gridPointForces,complexGridPointForcesObject)
             self.readOGF_numWide16()
-            #self.handleResultsBuffer3(self.OUG_ComplexTable)
         else:
-            raise NotImplementedError('only numWide=10 or 16 is allowed  numWide=%s' %(self.numWide))
+            #self.log.debug('skipping approach/table/format/sortCode=%s on %s-OGF table' %(self.tableName,self.atfsCode))
+            self.skipOES_Element()
+            #raise NotImplementedError('%s-OGF only supports numWide=10,16' %(self.tableName))
+
+        #sys.exit('stopping in OGF')        
+        
+        #readCase = True
+        #if self.iSubcase in self.expectedTimes and len(self.expectedTimes[self.iSubcase])>0:
+        #    readCase = self.updateDtMap()
+        
+        #if self.obj and readCase:
+        #    self.readScalarsOut(debug=False)
+        #else:
+        #    self.skipOES_Element()
         ###
-
+        #if self.obj:
+        #    self.readScalars8(debug=False)
+        #else:
+        #    self.skipOES_Element()
+        ###
+        #print self.obj
+        #return
+    
     def readOGF_numWide10(self):
-        dt = self.nonlinearFactor
-        (format1,extract) = self.getOEF_FormatStart()
-        format1 += 'issssssssffffff'
-
+        (eKey,scaleValue) = self.extractDt()
+        Format = eKey+'issssssssffffff'
         while len(self.data)>=40:
             eData     = self.data[0:4*10]
             self.data = self.data[4*10: ]
-            out = unpack(format1,eData)
+            out = unpack(Format,eData)
             (eKey,eid,a,b,c,d,e,f,g,h,f1,f2,f3,m1,m2,m3) = out
-            eKey = extract(eKey,dt)
+            eKey = scaleValue(eKey)
             elemName = a+b+c+d+e+f+g+h
             elemName = elemName.strip()
             #data = (eid,elemName,f1,f2,f3,m1,m2,m3)
-            self.obj.add(dt,eKey,eid,elemName,f1,f2,f3,m1,m2,m3)
+            self.obj.add(eKey,eid,elemName,f1,f2,f3,m1,m2,m3)
             #print "eid/dt/freq=%s eid=%-6s eName=%-8s f1=%g f2=%g f3=%g m1=%g m2=%g m3=%g" %(ekey,eid,elemName,f1,f2,f3,m1,m2,m3)
             #sys.exit('asfd')
         #print len(self.data)
         self.handleResultsBuffer(self.readOGF_numWide10)
 
     def readOGF_numWide16(self):
-        dt = self.nonlinearFactor
-        (format1,extract) = self.getOEF_FormatStart()
-        format1 += 'issssssssffffffffffff'
-        isMagnitudePhase = self.isMagnitudePhase()
-
+        (eKey,scaleValue) = self.extractDt()
+        Format = eKey+'issssssssffffffffffff'
         while len(self.data)>=64:
             eData     = self.data[0:4*16]
             self.data = self.data[4*16: ]
-            out = unpack(format1,eData)
+            out = unpack(Format,eData)
             (eKey,eid,a,b,c,d,e,f,g,h,f1r,f2r,f3r,m1r,m2r,m3r,f1i,f2i,f3i,m1i,m2i,m3i) = out
-            eKey = extract(eKey,dt)
-
-            if isMagnitudePhase:
-                f1 = polarToRealImag(f1r,f1i); m1 = polarToRealImag(m1r,m1i)
-                f2 = polarToRealImag(f2r,f2i); m2 = polarToRealImag(m2r,m2i)
-                f3 = polarToRealImag(f3r,f3i); m3 = polarToRealImag(m3r,m3i)
-            else:
-                f1 = complex(f1r,f1i); m1 = complex(m1r,m1i)
-                f2 = complex(f2r,f2i); m2 = complex(m2r,m2i)
-                f3 = complex(f3r,f3i); m3 = complex(m3r,m3i)
-
+            eKey = scaleValue(eKey)
+            f1i = f1i*1j
+            f1i = f2i*1j
+            f1i = f3i*1j
+            m1i = m1i*1j
+            m2i = m2i*1j
+            m3i = m3i*1j
             elemName = a+b+c+d+e+f+g+h
             elemName = elemName.strip()
             #print "eid/dt/freq=%s eid=%-6s eName=%-8s f1=%s f2=%s f3=%s m1=%s m2=%s m3=%s" %(ekey,eid,elemName,f1r+f1i,f2r+f2i,f3r+f3i,m1r+m1i,m2r+m2i,m3r+m3i)
-            self.obj.add(dt,eKey,eid,elemName,f1,f2,f3,m1,m2,m3)
+            self.obj.add(eKey,eid,elemName,f1r,f2r,f3r,m1r,m2r,m3r,f1i,f2i,f3i,m1i,m2i,m3i)
         self.handleResultsBuffer(self.readOGF_numWide16)
 
     def readThermal4(self):
@@ -211,9 +237,232 @@ class OGF(object):
         for i in range(nEntries):
             eData = self.data[n:n+32]
             out = unpack('iiffffff',eData)
-            #nid = (out[0]-self.deviceCode)//10  ## @todo update...
+            nid = (out[0]-self.deviceCode)//10
 
             #print out
             n+=32
             #print "nid = ",nid
         #sys.exit('thermal4...')
+
+    def readOGF_Data_table7_format1_sort0(self):  # modes
+        #assert self.formatCode==1 # Real
+        #assert self.sortCode==0   # Real
+        
+        if self.thermal==0:
+            #print self.codeInformation()
+            if self.analysisCode==2: # nonlinear static eigenvector
+                #print "isEigenvector2"
+                self.createTransientObject(self.eigenvectors,eigenVectorObject)
+            elif self.analysisCode==8: # post-buckling eigenvector
+                #print "isPostBucklingEigenvector8"
+                self.createTransientObject(self.eigenvectors,realEigenVectorObject)
+            else:
+                #raise Exception('unsupported %s-OGF static solution...atfsCode=%s' %(self.tableName,self.atfsCode))
+                pass
+            ###
+        elif self.thermal==1:
+            #raise NotImplementedError('unsupported %s-OGF thermal solution...atfsCode=%s' %(self.tableName,self.atfsCode))
+            pass
+        else:
+            #raise NotImplementedError('invalid %s-OGF thermal flag...not 0 or 1...flag=%s' %(self.tableName,self.thermal))
+            pass
+        ###
+        if self.obj:
+            self.readScalars8(debug=False)
+        else:
+            self.skipOES_Element()
+        #if self.analysisCode not in [2,8]:
+        #    raise Exception('check_format1...')
+        ###
+
+    def readOGF_Data_table1_format1_sort1(self): # displacement
+        #assert self.formatCode==1 # Real
+        #assert self.sortCode==1   # Real/Imaginary
+        if self.thermal==0:
+            if self.analysisCode==5: # complex displacements (real/imaginary)
+                #print "isComplexDisplacement"
+                self.createTransientObject(self.displacements,complexDisplacementObject)
+            #elif self.analysisCode==7: # pre-buckling displacement
+                #print "isPreBucklingDisplacement"
+                #self.createTransientObject(self.displacements,displacementObject)
+            #elif self.analysisCode==9: # nonlinear static eigenvector
+                #print "isComplexEigenvalues"
+                #self.createTransientObject(self.displacements,eigenVectorObject)
+            #elif self.analysisCode==11: # Geometric nonlinear statics
+                #print "isNonlinearStaticDisplacement"
+                #self.createTransientObject(self.displacements,displacementObject)
+            else:
+                #raise NotImplementedError('unsupported %s-OGF static table1_format1_sort1 solution...atfsCode=%s' %(self.tableName,self.atfsCode))
+                pass
+            ###
+        else:
+            #raise Exception('invalid thermal flag...not 0 or 1...flag=%s' %(self.thermal))
+            pass
+        ###
+        #print "objName = ",self.obj.name()
+        if self.obj:
+            self.readScalars14(debug=False)
+        else:
+            self.skipOES_Element()
+        #print "---OBJ---"
+        #print self.obj
+        #raise Exception('format1_sort1')
+        #return
+
+    def readOGF_Data_table7_format1_sort1(self): # modes
+        #assert self.formatCode==1 # Real
+        #assert self.sortCode==1   # Real/Imaginary
+        #print self.codeInformation()
+        if self.thermal==0:
+            #if self.analysisCode==5: # frequency displacement
+                #print "isFrequencyDisplacement"
+                #self.createTransientObject(self.freqDisplacements,eigenVectorObject)
+            #elif self.analysisCode==7: # pre-buckling displacement
+                #print "isPreBucklingDisplacement"
+                #self.createTransientObject(self.displacements,displacementObject)
+            if self.analysisCode==9: # nonlinear static eigenvector
+                #print "isComplexEigenvalues"
+                self.createTransientObject(self.eigenvectors,complexEigenVectorObject)
+            #elif self.analysisCode==11: # Geometric nonlinear statics
+                #print "isNonlinearStaticDisplacement"
+                #self.createTransientObject(self.displacements,displacementObject)
+            else:
+                #raise NotImplementedError('unsupported %s-OGF static table7_format1_sort1 solution...atfsCode=%s' %(self.tableName,self.atfsCode))
+                pass
+            ###
+        else:
+            #raise Not ImplementedError('invalid thermal flag...not 0 or 1...flag=%s' %(self.thermal))
+            pass
+        ###
+        #print "objName = ",self.obj.name()
+        if self.obj:
+            self.readScalars14()
+        else:
+            self.skipOES_Element()
+        #print self.obj
+        #return
+
+    def readOGF_Data_table1_format2_sort0(self): # displacement
+        if self.thermal==0:
+            if self.analysisCode==6: # transient displacement
+                #print "isTransientDisplacement"
+                self.createTransientObject(self.displacements,displacementObject)
+            else:
+                #raise NotImplementedError('unsupported %s-OGF static solution...atfsCode=%s' %(self.tableName,self.atfsCode))
+                pass
+            ###
+        elif self.thermal==1:
+            #raise NotImplementedError('unsupported %s-OGF thermal solution...atfsCode=%s' %(self.tableName,self.atfsCode))
+            pass
+        else:
+            raise NotImplementedError('invalid thermal flag...not 0 or 1...flag=%s' %(self.thermal))
+            pass
+        ###
+        if self.obj:
+            #self.readScalars8()
+            self.readScalarsOut(debug=False)
+        else:
+            self.skipOES_Element()
+
+    def readOGF_Data_table1_format2_sort1(self): # displacement
+        #assert self.formatCode==2 # Real/Imaginary
+        #assert self.sortCode==1   # Real/Imaginary
+        #print self.codeInformation()
+        if self.thermal==0:
+            if self.analysisCode==5: # frequency displacement
+                #print "isFrequencyDisplacement"
+                self.createTransientObject(self.displacements,complexDisplacementObject)
+            elif self.analysisCode==7: # pre-buckling displacement
+                #print "isPreBucklingDisplacement"
+                self.createTransientObject(self.displacements,displacementObject)
+            #elif self.analysisCode==9 and self.sortCode==1: # nonlinear static eigenvector
+                #print "isComplexEigenvalues"
+                #self.createTransientObject(self.complexEigenvalues,eigenVectorObject)
+                #self.readScalars8()
+            else:
+                #raise NotImplementedError('unsupported %s-OGF static solution...atfsCode=%s' %(self.tableName,self.atfsCode))
+                pass
+            ###
+        elif self.thermal==1:
+            #raise NotImplementedError('unsupported %s-OGF thermal solution...atfsCode=%s' %(self.tableName,self.atfsCode))
+            pass
+        else:
+            #raise NotImplementedError('invalid thermal flag...not 0 or 1...flag=%s' %(self.thermal))
+            pass
+        ###
+        if self.obj:
+            self.readScalarsF14()
+        else:
+            self.skipOES_Element()
+        #print self.obj
+        #return
+
+    def readOGF_Data_table1_format3_sort0(self): # displacement
+        #assert self.formatCode==3 # Magnitude/Phase
+        #assert self.sortCode==0   # Real
+        #print self.codeInformation()
+        if self.thermal==0:
+            raise Exception('unsupported OGF static solution...atfsCode=%s' %(self.atfsCode))
+            if self.analysisCode==1: # displacement
+                #print "isDisplacement"
+                self.createTransientObject(self.displacements,displacementObject)
+            elif self.analysisCode==2: # nonlinear static eigenvector
+                #print "isEigenvector_3_0"
+                self.createTransientObject(self.eigenvectors,eigenVectorObject)
+            elif self.analysisCode==5: # frequency displacement
+                #print "isFreqDisplacement"
+                self.createTransientObject(self.freqDisplacements,displacementObject)
+            elif self.analysisCode==6: # transient displacement
+                #print "isTransientDisplacement"
+                self.createTransientObject(self.displacements,displacementObject)
+            elif self.analysisCode==7: # pre-buckling displacement
+                #print "isPreBucklingDisplacement"
+                self.createTransientObject(self.preBucklingDisplacements,displacementObject)
+            elif self.analysisCode==10: # transient velocity
+                #print "isTransientVelocity"
+                self.createTransientObject(self.velocities,displacementObject,self.dt)
+            else:
+                #raise NotImplementedError('unsupported %s-OGF static solution...atfsCode=%s' %(self.tableName,self.atfsCode))
+                pass
+            ###
+        elif self.thermal==1:
+            raise NotImplementedError('unsupported %s-OGF thermal solution...atfsCode=%s' %(self.tableName,self.atfsCode))
+            pass
+        else:
+            raise NotImplementedError('invalid thermal flag...not 0 or 1...flag=%s' %(self.thermal))
+            pass
+        ###
+        if self.obj:
+            #self.readScalars8()
+            self.readScalarsOut(debug=False)
+        else:
+            self.skipOES_Element()
+
+    def readOGF_Data_table1_format3_sort1(self): # displacemnt
+        #assert self.formatCode==3 # Magnitude/Phase
+        #assert self.sortCode==1   # Imaginary
+        if self.thermal==0:
+            if self.analysisCode==5: # complex frequency displacement
+                #print "isComplexFreqDisplacement"
+                self.createTransientObject(self.displacements,complexDisplacementObject)
+            #elif self.analysisCode==7: # pre-buckling displacement
+                #print "isComlexPreBucklingDisplacement"
+                #self.createTransientObject(self.complexDisplacements,displacementObject)
+            #elif self.analysisCode==9: # nonlinear static eigenvector
+                #print "isComplexEigenvalues"
+                #self.createTransientObject(self.complexEigenvalues,eigenVectorObject)
+            else:
+                #raise NotImplementedError('unsupported %s-OGF static solution...atfsCode=%s' %(self.tableName,self.atfsCode))
+                pass
+            ###
+        elif self.thermal==1:
+            #raise NotImplementedError('unsupported %s-OGF thermal solution...atfsCode=%s' %(self.tableName,self.atfsCode))
+            pass
+        else:
+            #raise NotImplementedError('invalid thermal flag...not 0 or 1...flag=%s' %(self.thermal))
+            pass
+        ###
+        if self.obj:
+            self.readScalars14()
+        else:
+            self.skipOES_Element()

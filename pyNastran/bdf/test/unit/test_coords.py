@@ -1,10 +1,34 @@
+## GNU Lesser General Public License
+## 
+## Program pyNastran - a python interface to NASTRAN files
+## Copyright (C) 2011-2012  Steven Doyle, Al Danial
+## 
+## Authors and copyright holders of pyNastran
+## Steven Doyle <mesheb82@gmail.com>
+## Al Danial    <al.danial@gmail.com>
+## 
+## This file is part of pyNastran.
+## 
+## pyNastran is free software: you can redistribute it and/or modify
+## it under the terms of the GNU Lesser General Public License as published by
+## the Free Software Foundation, either version 3 of the License, or
+## (at your option) any later version.
+## 
+## pyNastran is distributed in the hope that it will be useful,
+## but WITHOUT ANY WARRANTY; without even the implied warranty of
+## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+## GNU General Public License for more details.
+## 
+## You should have received a copy of the GNU Lesser General Public License
+## along with pyNastran.  If not, see <http://www.gnu.org/licenses/>.
+## 
 
 from numpy import array,allclose
 import unittest
 
 from pyNastran.bdf.bdf import BDF
 
-class TestCoords(unittest.TestCase):
+class Tester(unittest.TestCase):
     def test_same(self):  # passes
         grids  = [
                      [0,  0.,  0.,  1.],
@@ -107,7 +131,7 @@ class TestCoords(unittest.TestCase):
 
 
     def test_rid_1(self):
-        print 'test_rid_1'
+        print 'test_rid_2'
         grids  = [
                      [2,    10., 5.,  3.],
                  ]
@@ -117,31 +141,11 @@ class TestCoords(unittest.TestCase):
 
         coords = [   #rid origin,     zaxis        xaxis
                    [  0,  [0.,0.,0.], [0.,0.,-1.], [1.,0.,0.]  ],  # cid=1
-                   [  1,  [1.,1.,1.], [1.,1., 2.], [2.,1.,1.]  ],  # cid=2
+                   [  1,  [1.,1.,1.], [1.,1.,2.],  [2.,1., 1.]   ],  # cid=2
                  ]
         self.getNodes(grids,gridsExpected,coords)
 
-    def test_cord2r_1(self):
-        grid = ['GRID       20143       7 -9.31-4  .11841 .028296']
-        coord = ['CORD2R         7           1.135 .089237  -.0676    .135 .089237  -.0676',
-                 '           1.135 .089237   .9324']
-        
-        mesh = BDF()
-        card = mesh.processCard(grid)
-        mesh.addCard(card,card[0])
-        card = mesh.processCard(coord)
-        mesh.addCard(card,card[0])
-        mesh.crossReference()
 
-        g = mesh.Node(20143)
-        print g.Position(debug=False)
-        diff = g.Position() - array([1.106704,.207647,-0.068531])
-        
-        assert allclose(diff,0.)
-
-    def makeNodes(self,grids,coords):
-        grids2 = []
-        
     def getNodes(self,grids,gridsExpected,coords,debug=False):
         mesh = BDF(debug=False)
 
@@ -171,6 +175,7 @@ class TestCoords(unittest.TestCase):
             msg = 'expected=%s actual=%s' %(n,pos)
             assert allclose(n,pos),msg
         ###
+        #print "hi"
 
 if __name__=='__main__':
     unittest.main()

@@ -1,3 +1,27 @@
+## GNU Lesser General Public License
+## 
+## Program pyNastran - a python interface to NASTRAN files
+## Copyright (C) 2011-2012  Steven Doyle, Al Danial
+## 
+## Authors and copyright holders of pyNastran
+## Steven Doyle <mesheb82@gmail.com>
+## Al Danial    <al.danial@gmail.com>
+## 
+## This file is part of pyNastran.
+## 
+## pyNastran is free software: you can redistribute it and/or modify
+## it under the terms of the GNU Lesser General Public License as published by
+## the Free Software Foundation, either version 3 of the License, or
+## (at your option) any later version.
+## 
+## pyNastran is distributed in the hope that it will be useful,
+## but WITHOUT ANY WARRANTY; without even the implied warranty of
+## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+## GNU General Public License for more details.
+## 
+## You should have received a copy of the GNU Lesser General Public License
+## along with pyNastran.  If not, see <http://www.gnu.org/licenses/>.
+## 
 #!/usr/bin/python
 
 import os
@@ -486,10 +510,10 @@ def runArgParse():
     #                   help='path to OP2 file')
 
     group = parser.add_mutually_exclusive_group()
-    group.add_argument( '-q','--quiet',    dest='quiet',    action='store_true',help='prints debug messages (default=True)')
+    group.add_argument( '-q','--quiet',    dest='quiet',    action='store_true',help='Prints   debug messages (default=True)')
 
     group2 = parser.add_mutually_exclusive_group()
-    group2.add_argument('-e','--edges',    dest='edges', action='store_true',help='shows element edges as black lines')
+    group2.add_argument('-g','--edges',    dest='edges', action='store_true',help='Reads the OP2 for geometry, which can be written out')
     #group2.add_argument('-w','--writeBDF', dest='writeBDF', action='store_true',help='Writes the bdf to fem.bdf.out')
 
     parser.add_argument('-v','--version',action='version',version=ver)

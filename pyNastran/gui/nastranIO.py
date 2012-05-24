@@ -1,3 +1,27 @@
+## GNU Lesser General Public License
+## 
+## Program pyNastran - a python interface to NASTRAN files
+## Copyright (C) 2011-2012  Steven Doyle, Al Danial
+## 
+## Authors and copyright holders of pyNastran
+## Steven Doyle <mesheb82@gmail.com>
+## Al Danial    <al.danial@gmail.com>
+## 
+## This file is part of pyNastran.
+## 
+## pyNastran is free software: you can redistribute it and/or modify
+## it under the terms of the GNU Lesser General Public License as published by
+## the Free Software Foundation, either version 3 of the License, or
+## (at your option) any later version.
+## 
+## pyNastran is distributed in the hope that it will be useful,
+## but WITHOUT ANY WARRANTY; without even the implied warranty of
+## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+## GNU General Public License for more details.
+## 
+## You should have received a copy of the GNU Lesser General Public License
+## along with pyNastran.  If not, see <http://www.gnu.org/licenses/>.
+## 
 #VTK_TRIANGLE = 5
 #VTK_QUADRATIC_TRIANGLE = 22
 
@@ -94,7 +118,7 @@ class NastranIO(object):
         if 0:
             i=0
             fraction = 1./nNodes # so you can color the nodes by ID
-            for nid,node in sorted(model.nodes.iteritems()):
+            for nid,node in sorted(model.nodes.items()):
                 #print "i = ",i
                 point = node.Position()
                 #print "point = ",point
@@ -111,7 +135,7 @@ class NastranIO(object):
                 i+=1
         if 1:
             i = 0
-            for nid,node in sorted(model.nodes.iteritems()):
+            for nid,node in sorted(model.nodes.items()):
                 point = node.Position()
                 points.InsertPoint(i, *point)
                 self.nidMap[nid] = i
@@ -121,9 +145,8 @@ class NastranIO(object):
         j = 0
         points2 = vtk.vtkPoints()
         points2.SetNumberOfPoints(nCAeros*4+nCONM2)
-        for eid,element in sorted(model.caeros.iteritems()):
-            if (isinstance(element,CAERO1) or isinstance(element,CAERO3) or
-                isinstance(element,CAERO4)  or isinstance(element,CAERO5)):
+        for eid,element in sorted(model.caeros.items()):
+            if isinstance(element,CAERO1):
                 cpoints = element.Points()
                 elem = vtkQuad()
                 elem.GetPointIds().SetId(0, j)
@@ -136,20 +159,15 @@ class NastranIO(object):
                 points2.InsertPoint(j+3, *cpoints[3])
                 self.grid2.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
                 j+=4
-            #elif isinstance(element,CAERO2): # cylinder
-                #pass
-            else:
-                print "skipping %s" %(element.type)
-                
         self.mapElements(points,points2,self.nidMap,model,j)
 
     def mapElements(self,points,points2,nidMap,model,j):
         self.eidMap = {}
         i = 0
-        for eid,element in sorted(model.elements.iteritems()):
+        for eid,element in sorted(model.elements.items()):
             self.eidMap[eid] = i
             #print element.type
-            if isinstance(element,CTRIA3) or isinstance(element,CTRIAR):
+            if isinstance(element,CTRIA3):
                 #print "ctria3"
                 elem = vtkTriangle()
                 nodeIDs = element.nodeIDs()
@@ -192,7 +210,7 @@ class NastranIO(object):
                 #elem.GetPointIds().SetId(2, nidMap[nodeIDs[2]])
                 self.grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
 
-            elif isinstance(element,CQUAD4) or isinstance(element,CSHEAR) or isinstance(element,CQUADR):
+            elif isinstance(element,CQUAD4) or isinstance(element,CSHEAR):
                 nodeIDs = element.nodeIDs()
                 elem = vtkQuad()
                 elem.GetPointIds().SetId(0, nidMap[nodeIDs[0]])
@@ -330,7 +348,7 @@ class NastranIO(object):
                 #elem.SetRadius(1.0)
                 #print str(element)
 
-                points2.InsertPoint(j,*c)
+                points2.InsertPoint(j,     *c)
                 elem.GetPointIds().SetId(0, j)
                 #elem.SetCenter(points.GetPoint(nidMap[nid]))
                 self.grid2.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
@@ -364,7 +382,7 @@ class NastranIO(object):
         
         #case = op2.displacements[1]
         #print "case = ",case
-        #for nodeID,translation in sorted(case.translations.iteritems()):
+        #for nodeID,translation in sorted(case.translations.items()):
             #print "nodeID=%s t=%s" %(nodeID,translation)
         #self.iSubcaseNameMap[self.iSubcase] = [Subtitle,Label]
 
@@ -379,14 +397,14 @@ class NastranIO(object):
         for ID in subcaseIDs:
             if nidsSet:
                 nids = zeros(self.nNodes,'d')
-                for nid,nid2 in self.nidMap.iteritems():
+                for nid,nid2 in self.nidMap.items():
                     nids[nid2] = nid
                 cases[(ID,'Node_ID',1,'node','%.0f')] = nids
                 nidsSet = True
 
             if eidsSet:
                 eids = zeros(nElements,'d')
-                for eid,eid2 in self.eidMap.iteritems():
+                for eid,eid2 in self.eidMap.items():
                     eids[eid2] = eid
                
                 eKey = (ID,'isElementOn',1,'centroid','%.0g')
@@ -405,7 +423,7 @@ class NastranIO(object):
                     #print case
                     temps = zeros(self.nNodes)
                     key = (ID,'Temperature',1,'node','%g')
-                    for nid,T in case.temperatures.iteritems():
+                    for nid,T in case.temperatures.items():
                         #print T
                         nid2 = self.nidMap[nid]
                         temps[nid2] = T

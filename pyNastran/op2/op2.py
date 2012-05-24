@@ -1,3 +1,27 @@
+## GNU Lesser General Public License
+## 
+## Program pyNastran - a python interface to NASTRAN files
+## Copyright (C) 2011-2012  Steven Doyle, Al Danial
+## 
+## Authors and copyright holders of pyNastran
+## Steven Doyle <mesheb82@gmail.com>
+## Al Danial    <al.danial@gmail.com>
+## 
+## This file is part of pyNastran.
+## 
+## pyNastran is free software: you can redistribute it and/or modify
+## it under the terms of the GNU Lesser General Public License as published by
+## the Free Software Foundation, either version 3 of the License, or
+## (at your option) any later version.
+## 
+## pyNastran is distributed in the hope that it will be useful,
+## but WITHOUT ANY WARRANTY; without even the implied warranty of
+## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+## GNU General Public License for more details.
+## 
+## You should have received a copy of the GNU Lesser General Public License
+## along with pyNastran.  If not, see <http://www.gnu.org/licenses/>.
+## 
 import os
 import sys
 from numpy import array
@@ -11,10 +35,9 @@ from pyNastran.bdf.bdf import BDF
 from pyNastran.op2.tables.resultTable import ResultTable
 from pyNastran.op2.tables.geom.geometryTables import GeometryTables
 from pyNastran.f06.f06Writer import F06Writer
-from pyNastran.f06.matlabWriter import MatlabWriter
 
 class OP2(BDF,  # BDF methods
-          FortranFile,Op2Codes,GeometryTables,ResultTable,F06Writer,MatlabWriter):
+          FortranFile,Op2Codes,GeometryTables,ResultTable,F06Writer):
 
     def setSubcases(self,iSubcases=[]):
         """
@@ -44,7 +67,7 @@ class OP2(BDF,  # BDF methods
                  subcaseID_2: [time3, time4]}
         """
         expectedTimes = {}
-        for iSubcase,eTimes in times.iteritems():
+        for iSubcase,eTimes in times.items():
             eTimes = list(times)
             eTimes.sort()
             expectedTimes[iSubcase] = array(eTimes)
@@ -105,30 +128,22 @@ class OP2(BDF,  # BDF methods
         self.skippedCardsFile = open('skippedCards.out','a')
 
         ## the list of supported tables (dont edit this)
-        self.tablesToRead = ['GEOM1', 'GEOM2', 'GEOM3', 'GEOM4',  # nodes/geometry/loads/BCs
-                             'GEOM1S','GEOM2S','GEOM3S','GEOM4S', # nodes/geometry/loads/BCs - superelements
-                             'GEOM1N', #???
-                             'EPT', 'MPT',  # properties/materials
-                             'EPTS','MPTS', # properties/materials - superelements
-                             'EDTS',         # ???
+        self.tablesToRead = ['GEOM1','GEOM2','GEOM3','GEOM4', # nodes/geometry/loads/BCs
+                             'EPT','MPT','MPTS', # properties/materials
                              'DYNAMIC','DYNAMICS',
-                             'DIT',                           # tables (e.g. TABLED1)
-                             'LAMA','BLAMA',                  # eigenvalues
+                             'DIT',  # tables
+                             'LAMA',
 
-                             'BGPDT','BGPDTS',                # boundary grids???
-                             'EQEXIN','EQEXINS','PVT0','CASECC','EDOM',
-                             'DESTAB',                        # design variables
-                             'OQG1','OQGV1',                  # spc forces
-                             'OQMG1',                         # mpc forces
+                            'BGPDT','EQEXIN','EQEXINS','PVT0','CASECC','EDOM',
+                             'DESTAB',                      # design variables
+                             'OQG1','OQGV1','OQMG1',        # spc/mpc forces
                              
-                             'OUGV1',                         # displacements                             
-                             'OGPFB1',                        # grid point forces
-                             'OGS1',                          # grid poitn stresses
+                             'OUGV1',                       # displacements                             
+                             'OGPFB1','OGS1',               # grid point forces/stresses
                              
-                             'OEF1X', 'DOEF1','OEFIT',        # element forces
-                             'OPG1','OPGV1','OPNL1',          # applied forces
-                             'OES1','OES1X','OES1X1','OES1C', # stress
-                             'OSTR1C','OSTR1X',               # strains
+                             'OEF1X', 'DOEF1','OEFIT',      # applied forces
+                             'OES1X','OES1X1','OES1C',      # stress
+                             'OSTR1C','OSTR1X',             # strains
                              'OESNLXR','OESNLXD','OESNL1X','OESNLBR', # nonlinear stress
 
                              'OESCP',                       # cylinder stress???
@@ -146,13 +161,13 @@ class OP2(BDF,  # BDF methods
                               'OESPSD2', 'OESATO2', 'OESRMS2', 'OESNO2', 'OESCRM2',
                               'OPGPSD2', 'OPGATO2', 'OPGRMS2', 'OPGNO2', 'OPGCRM2',
                               'OQGPSD2', 'OQGATO2', 'OQGRMS2', 'OQGNO2', 'OQGCRM2',
-                              
-                              'OQMPSD2', 'OQMATO2', 'OQMRMS2', 'OQMNO2', 'OQMCRM2',
                              'OSTRPSD2','OSTRATO2','OSTRRMS2','OSTRNO2','OSTRCRM2',
-                              'OUGPSD2', 'OUGATO2', 'OUGCRM2', 'OUGNO2', 'OUGRMS2', # supported-ish
+                              'OUGPSD2', 'OUGATO2', 'OUGCRM2', 'OUGNO2', 'OUGRMS2',
                               'OVGPSD2', 'OVGATO2', 'OVGRMS2', 'OVGNO2', 'OVGCRM2',
                              
                              ## @todo what do these do???
+                             'OPG1','OPGV1',
+                             'OPNL1',
                              'OUPV1',
                              'VIEWTB','ERRORN',
                              'OFMPF2M','OSMPF2M','OPMPF2M','OGPMPF2M','OLMPF2M',
@@ -161,13 +176,12 @@ class OP2(BDF,  # BDF methods
                              'EDOM',
                              'STDISP','SDF','MONITOR','AEMONPT',
                              'OGPWG', # grid point weight
-                             'OQP1',
-                             'OCRUG','OCRPG',
 
                              # new
                              'AFRF',             'AGRF',
                              'PMRF','PERF','PFRF',
-                             'FOL',
+                             'FOL','GEOM1N',
+                             
                              ]
         
         ## a dictionary that maps an integer of the subcaseName to the subcaseID
@@ -181,128 +195,99 @@ class OP2(BDF,  # BDF methods
         self.eigenvalues = {}
 
         ## OUG - displacement
-        self.displacements = {}           # tCode=1 thermal=0
-        self.displacementsPSD = {}        # random
-        self.displacementsATO = {}        # random
-        self.displacementsRMS = {}        # random
-        self.displacementsCRM = {}        # random
-        self.displacementsNO  = {}        # random
-        self.scaledDisplacements = {}     # tCode=1 thermal=8
+        self.displacements = {}           # aCode=1 tCode=1 fCode=1 sortCode=0 thermal=0
 
         ## OUG - temperatures
-        self.temperatures  = {}           # tCode=1 thermal=1
+        self.temperatures  = {}            # aCode=1 ------- ------- sortCode=0 thermal=1
+        #self.nonlinearDisplacements  = {} # aCode=6 ------- fCode=1 sortCode=0 thermal=0
+        #self.nonlinearTemperatures   = {} # ------- ------- ------- ---------- thermal=1
 
         ## OUG - eigenvectors
-        self.eigenvectors = {}            # tCode=7 thermal=0
+        self.eigenvectors = {}            # aCode=2 tCode=7 ------- sortCode=1 thermal=0
 
-        ## OUG - velocity
-        self.velocities = {}              # tCode=10 thermal=0
+        ## OUG - velocity (not done)
+        self.velocities = {}              # aCode=6 tCode=10 fCode=3 sortCode=0 thermal=0
 
-        ## OUG - acceleration
-        self.accelerations = {}           # tCode=11 thermal=0
+        ## OUG - acceleration (not done)
+        self.accelerations = {}           # aCode=6 tCode=11 fCode=3 sortCode=0 thermal=0
 
-        # OEF - Forces - tCode=4 thermal=0
-        self.rodForces = {}
-        self.barForces = {}
-        self.bar100Forces = {}
-        self.beamForces = {}
-        self.bendForces = {}
-        self.bushForces = {}
-        self.coneAxForces = {}
-        self.damperForces = {}
-        self.gapForces = {}
-        self.plateForces = {}
-        self.plateForces2 = {}
-        self.shearForces  = {}
-        self.solidPressureForces = {}
-        self.springForces = {}
-        self.viscForces = {}
-        
-        self.force_VU = {}
-        self.force_VU_2D = {}
-        
-        #OEF - Fluxes - tCode=4 thermal=1
-        self.thermalLoad_CONV  = {}
-        self.thermalLoad_CHBDY = {}
-        self.thermalLoad_1D    = {}
-        self.thermalLoad_2D_3D = {}
-        self.thermalLoad_VU    = {}
-        self.thermalLoad_VU_3D = {}
-        self.thermalLoad_VUBeam = {}
+        # OEF
+        # rename to staticLoads/thermalLoads
+        self.forces = {}
+        self.fluxes = {}
         #self.temperatureForces = {}       # aCode=1  tCode=4 fCode=1 sortCode=0 thermal=1
 
-        # OES - tCode=5 thermal=0 sCode=0,1 (stress/strain)
-        ## OES - CELAS1/CELAS2/CELAS3/CELAS4 stress
+        #self.modalForces = {}
+        
+        # rename to nonlinearStaticLoads/nonlinearThermalLoads ???
+        #self.nonlinearForces = {}         # aCode=10 tCode=4 fCode=1 sortCode=0 thermal=0
+        #self.nonlinearFluxes = {}         # aCode=10 tCode=4 fCode=1 sortCode=0 thermal=1
+
+        # OES
+        ## OES - CELAS1/CELAS2/CELAS3/CELAS4
         self.celasStress   = {}
-        ## OES - CELAS1/CELAS2/CELAS3/CELAS4 strain
+        ## OES - CELAS1/CELAS2/CELAS3/CELAS4
         self.celasStrain   = {}
         
         ## OES - CTRIAX6
         self.ctriaxStress = {}
         self.ctriaxStrain = {}
 
-        ## OES - isotropic CROD/CONROD/CTUBE stress
+        ## OES - isotropic CROD/CONROD/CTUBE
         self.rodStress  = {}
-        ## OES - isotropic CROD/CONROD/CTUBE strain
+        ## OES - isotropic CROD/CONROD/CTUBE
         self.rodStrain  = {}
-        ## OES - nonlinear CROD/CONROD/CTUBE stress
         self.nonlinearRodStress = {}
-        ## OES - nonlinear CROD/CONROD/CTUBE strain
         self.nonlinearRodStrain = {}
-        ## OES - isotropic CBAR stress
+        ## OES - isotropic CBAR
         self.barStress  = {}
-        ## OES - isotropic CBAR strain
+        ## OES - isotropic CBAR
         self.barStrain  = {}
-        ## OES - isotropic CBEAM stress
+        ## OES - isotropic CBEAM
         self.beamStress = {}
-        ## OES - isotropic CBEAM strain
+        ## OES - isotropic CBEAM
         self.beamStrain = {}
 
-        ## OES - isotropic CTRIA3/CQUAD4 stress
+        ## OES - isotropic CTRIA3/CQUAD4
         self.plateStress = {}
-        ## OES - isotropic CTRIA3/CQUAD4 strain
+        ## OES - isotropic CTRIA3/CQUAD4
         self.plateStrain = {}
-        ## OESNLXR - CTRIA3/CQUAD4 stress
+        ## OESNLXR - CTRIA3/CQUAD4
         self.nonlinearPlateStress = {}
-        ## OESNLXR - CTRIA3/CQUAD4 strain
         self.nonlinearPlateStrain = {}
         self.hyperelasticPlateStress = {}
         self.hyperelasticPlateStrain = {}
 
-        ## OES - isotropic CTETRA/CHEXA/CPENTA stress
+        ## OES - isotropic CTETRA/CHEXA/CPENTA
         self.solidStress = {}
-        ## OES - isotropic CTETRA/CHEXA/CPENTA strain
+        ## OES - isotropic CTETRA/CHEXA/CPENTA
         self.solidStrain = {}
-        ## OES - composite CTRIA3/CQUAD4 stress
+        ## OES - composite CTRIA3/CQUAD4
         self.compositePlateStress = {}
-        ## OES - composite CTRIA3/CQUAD4 strain
+        ## OES - composite CTRIA3/CQUAD4
         self.compositePlateStrain = {}
         
-        ## OES - CSHEAR stress
+        ## OES - CSHEAR
         self.shearStress = {}
-        ## OES - CSHEAR strain
+        ## OES - CSHEAR
         self.shearStrain = {}
         
 
         # OQG - spc/mpc forces
-        self.spcForces      = {}  # tCode=3?
-        self.mpcForces      = {}  # tCode=39
+        self.spcForces      = {}
+        #self.modalSPCForces = {}
+        self.mpcForces      = {}
+        #self.modalMPCForces = {}
         
         ## OGF - grid point forces
-        self.gridPointForces = {} # tCode=19
-
-        ## OGS1 - grid point stresses
-        self.gridPointStresses = {}       # tCode=26
-        self.gridPointVolumeStresses = {} # tCode=27
+        self.gridPointForces = {}
 
         ## OPG - summation of loads for each element
-        self.loadVectors  = {}       # tCode=2  thermal=0
-        self.thermalLoadVectors = {} # tCode=2  thermal=1
-        self.appliedLoads = {}       # tCode=19 thermal=0
-        self.forceVectors = {}       # tCode=12 thermal=0
+        self.appliedLoads = {}
+        self.loadVectors  = {}
         
         ## OEE - strain energy density
-        self.strainEnergy = {} # tCode=18
+        self.strainEnergy = {}
 
     def readTapeCode(self):
         """
@@ -315,7 +300,7 @@ class OP2(BDF,  # BDF methods
         if 0:
             marker = 0
             #print self.printSection(200)
-            sys.exit('stopping in readTapeCode in op2.py')
+            sys.exit()
             while marker != -1:
                 ints = self.readIntBlock()
                 marker = ints[0]
@@ -338,9 +323,9 @@ class OP2(BDF,  # BDF methods
                 #print "ints4 = ",ints
             #print ""
             #while marker != -1:
-                #ints = self.readIntBlock()
-                #marker = ints[0]
-                #print "ints1 = ",ints
+            #    ints = self.readIntBlock()
+            #    marker = ints[0]
+            #    print "ints1 = ",ints
             #print ""
             self.readMarkers([2])
 
@@ -391,10 +376,8 @@ class OP2(BDF,  # BDF methods
             msg  = 'When this happens, the analysis failed or the code bombed...check the F06.\n'
             msg += '  If the F06 is OK:\n'
             msg += '      1.  Make sure you used PARAM,POST,-1 in your BDF/DAT\n'
-            msg += '      2.  Run the problem on a different Operating System\n'
-            msg += '      3.  Are you running an OP2? :)  fname=%s' %(self.op2FileName)
+            msg += '      2.  Run the problem on a different Operating System'
             raise TapeCodeError(msg)
-            #raise
         ###
 
         isAnotherTable = True
@@ -419,20 +402,10 @@ class OP2(BDF,  # BDF methods
                 break
             elif tableName in self.tablesToRead:
                 self.tableName = tableName
-                self.isRegular = True
                 try:
                     #print "startTell = ",self.op2.tell()
                     if tableName=='GEOM1': # nodes,coords,etc.
                         self.readTable_Geom1()
-                    elif tableName=='GEOM1S': # superelements - nodes,coords,etc.
-                        self.readTable_Geom1S()
-                    elif tableName=='GEOM2S': # superelements - elements
-                        self.readTable_Geom2S()
-                    elif tableName=='GEOM3S': # superelements - static/thermal loads
-                        self.readTable_Geom3S()
-                    elif tableName=='GEOM4S': # superelements - constraints
-                        self.readTable_Geom4S()
-
                     #elif tableName=='GEOM1N':
                     #    self.readTable_Geom1N()
                     elif tableName=='GEOM2': # elements
@@ -450,7 +423,7 @@ class OP2(BDF,  # BDF methods
                         self.readTable_DYNAMICS()
                     elif  tableName in ['DIT']:  # tables...TABLED1/TABLEM1/TABLES1/GUST
                         self.readTable_DIT()
-                    elif tableName in ['LAMA','BLAMA']: # eigenvalue
+                    elif tableName in ['LAMA']: # eigenvalue
                         self.readTable_LAMA()
 
                     elif tableName in ['VIEWTB','EQEXIN','EQEXINS','OEFIT','GEOM1N','OGPWG',]:
@@ -472,24 +445,19 @@ class OP2(BDF,  # BDF methods
                         self.readTable_OPG()
                     elif tableName in ['OGPFB1',]:
                         self.readTable_OGF()
-                    elif tableName in ['OCRUG','OCRPG']:  # totally guessing...
-                        self.readTable_OUG()
 
 
                     elif tableName in ['OEF1X','DOEF1',  'OEFPSD2','OEFATO2','OEFRMS2','OEFNO2','OEFCRM2',]:  # applied loads
                         self.readTable_OEF()
-                    elif tableName in ['OQG1','OQGV1','OQP1',]:  # spc forces
+                    elif tableName in ['OQG1','OQMG1','OQGV1']:  # spc/mpc forces
                         self.readTable_OQG()
-                    elif tableName in ['OQMG1','OQMPSD2','OQMATO2','OQMRMS2','OQMNO2','OQMCRM2',]: # mpc forces
-                        #self.readTable_OQG()
-                        self.readTable_DUMMY_GEOM(tableName)
- 
+
                     elif tableName in ['OUGV1','OUPV1']: # displacements/velocity/acceleration
                         self.readTable_OUG()
                     elif tableName in ['OUGPSD2','OUGATO2','OUGRMS2','OUGNO2','OUGCRM2']: # OUG tables???
                         self.readTable_OUG()
 
-                    elif tableName in ['OES1','OES1X','OES1X1','OSTR1X','OES1C','OESCP','OESRT','OESNLXR','OESNL1X']: # stress
+                    elif tableName in ['OES1X','OES1X1','OSTR1X','OES1C','OESCP','OESRT','OESNLXR','OESNL1X']: # stress
                         self.readTable_OES()  # 
                     elif tableName in ['OSTR1X','OSTR1C',]: # strain
                         self.readTable_OES()
@@ -534,9 +502,7 @@ class OP2(BDF,  # BDF methods
                         self.readTable_DUMMY_GEOM(tableName)
                     elif tableName in ['OPGRMS2','OPGNO2','OPGCRM2','OQGPSD2',]:
                         self.readTable_DUMMY_GEOM(tableName)
-                    elif tableName in ['OQGPSD2','OQGATO2','OQGRMS2','OQGNO2','OQGCRM2','PVT0','CASECC','EDOM',]:
-                        self.readTable_DUMMY_GEOM(tableName)
-                    elif tableName in ['BGPDT','BGPDTS','EDTS',]:
+                    elif tableName in ['OQGPSD2','OQGATO2','OQGRMS2','OQGNO2','OQGCRM2','PVT0','CASECC','BGPDT','EDOM',]:
                         self.readTable_DUMMY_GEOM(tableName)
                     else:
                         raise InvalidKeywordError('unhandled tableName=|%s|' %(tableName))
@@ -548,8 +514,6 @@ class OP2(BDF,  # BDF methods
                     isAnotherTable = False
                 ###
             else:
-                if tableName not in [None]:
-                    assert 1==0,'%s is not supported' %(tableName)
                 (isAnotherTable) = self.skipNextTable()
                 continue
             #print self.printSection(140)
@@ -617,8 +581,8 @@ class OP2(BDF,  # BDF methods
             #sys.stderr.write("  print and plot can cause bad results...if there's a crash, try plot only\n")
             self.deviceCode = 1
             
-            #self.log.info('The op2 may be inconsistent...')
-            #self.log.info("  print and plot can cause bad results...if there's a crash, try plot only")
+            self.log.info('The op2 may be inconsistent...')
+            self.log.info("  print and plot can cause bad results...if there's a crash, try plot only")
             #pass
 
         ## dataCode stores the active variables; these pass important
@@ -634,7 +598,7 @@ class OP2(BDF,  # BDF methods
         self.parseSortCode()
 
         #print "aCode(1)=%s analysisCode=%s deviceCode=%s tCode(2)=%s tableCode=%s sortCode=%s iSubcase(4)=%s" %(aCode,self.analysisCode,self.deviceCode,tCode,self.tableCode,self.sortCode,self.iSubcase)
-        #self.log.debug(self.printTableCode(self.tableCode))
+        self.log.debug(self.printTableCode(self.tableCode))
         return (int3)
 
     def getValues(self,data,sFormat,iWordStart,iWordStop=None):
@@ -663,7 +627,7 @@ class OP2(BDF,  # BDF methods
         messing up data
         """
         params += ['dataCode','deviceCode','analysisCode','tableCode','sortCode','iSubcase',
-                   'data','numWide','nonlinearFactor','obj','subtitle','label']
+                   'data','numWide','nonlinearFactor','obj']
         for param in params:
             if hasattr(self,param):
                 #print '%s = %s' %(param,getattr(self,param))
@@ -681,26 +645,28 @@ class OP2(BDF,  # BDF methods
         assert bufferWords>0,self.printSection(220)
 
     def readTitle(self):
-        """
-        reads the Title, Subtitle, and Label.
-        Puts them in self.iSubcaseNameMap[iSubcase] = [Subtitle,Label]
-        """
-
-        ## the title of the analysis
+        """reads the Title, Subtitle, and Label.
+        Puts them in self.iSubcaseNameMap[iSubcase] = [Subtitle,Label]"""
         word = self.readString(384) # titleSubtitleLabel
-        self.Title    = word[0:128].strip()
-        ## the subtitle of the subcase
-        self.subtitle = word[128:256].strip()
-        ## the label of the subcase
-        self.label    = word[256:328].strip()
+        Title    = word[0:128].strip()
+        Subtitle = word[128:256].strip()
+        Label    = word[256:].strip()
+        #print "Title    %s |%s|" %(len(Title   ),Title)
+        #print "Subtitle %s |%s|" %(len(Subtitle),Subtitle)
+        #print "Label    %s |%s|" %(len(Label   ),Label)
+        #print "Title    %s |%s|" %(len(Title   ),Title.strip())
+        #print "Subtitle %s |%s|" %(len(Subtitle),Subtitle.strip())
+        #print "Label    %s |%s|" %(len(Label   ),Label.strip())
+        #print "Title    |%s|" %(Title)
+        #print "Subtitle |%s|" %(Subtitle)
+        #print "Label    |%s|" %(Label)
 
         self.readHollerith() # not really a hollerith, just the end of the block (so bufferWords*4)
 
-        self.dataCode['subtitle'] = self.subtitle
-        self.dataCode['label']    = self.label
-
+        ## the title of the analysis
+        self.Title = Title.strip()
         if self.iSubcase not in self.iSubcaseNameMap:
-            self.iSubcaseNameMap[self.iSubcase] = [self.subtitle,self.label]
+            self.iSubcaseNameMap[self.iSubcase] = [Subtitle,Label]
 
     def tableInit(self,word):
         """
@@ -708,7 +674,6 @@ class OP2(BDF,  # BDF methods
         """
         ## the local table name
         self.tableName = word.strip()
-        ## the names of all the tables
         self.tableNames.append(word)
         msg = '*'*20+word+'*'*20+'\n'
         if self.makeOp2Debug:
@@ -724,25 +689,27 @@ class OP2(BDF,  # BDF methods
         results = [
                    # OUG - Displacements/Velocity/Acceleration/Temperature/Heat Flux/
                    #       SPC Forces
-                   self.displacements,self.displacementsPSD,self.displacementsATO,
-                   self.temperatures,
+                   self.displacements,self.temperatures,
                    self.eigenvalues,
                    self.eigenvectors,
                    self.velocities,
                    self.accelerations,
+                   #self.nonlinearTemperatures,self.nonlinearDisplacements,
+                   #self.forces,self.fluxes,
                    
                    # OEF - Applied Forces/Temperatures - ???
+                   #self.nonlinearForces,self.nonlinearFluxes,
+                   #self.temperatureForces,
                    
                    # OQG1 - Forces
-                   self.spcForces,self.mpcForces,
+                   #self.spcForces,self.mpcForces,
                    
                    # OGF - Grid Point Forces
                    self.gridPointForces,
 
                    # OPG - Applied Force/Moment
                    self.appliedLoads,
-                   self.loadVectors,self.thermalLoadVectors,
-                   self.forceVectors,
+                   self.loadVectors,
 
                    # OES - Stress/Strain
                    self.celasStress,self.celasStrain,
@@ -754,7 +721,7 @@ class OP2(BDF,  # BDF methods
                    self.plateStress,self.plateStrain,
                    self.solidStress,self.solidStrain,
                    self.compositePlateStress,self.compositePlateStrain,
-                   self.ctriaxStress,self.ctriaxStrain,
+                   self.ctriaxStress,self.ctriaxStrain, # strain not coded???
                    
                    # OEE - Strain Energy
                    self.strainEnergy,
@@ -762,7 +729,7 @@ class OP2(BDF,  # BDF methods
         
         msg = '---ALL RESULTS---\n'
         for result in results:
-            for iSubcase,res in sorted(result.iteritems()):
+            for iSubcase,res in sorted(result.items()):
                 msg += 'iSubcase = %s\n' %(iSubcase)
                 try:
                     msg += str(res) + '\n'

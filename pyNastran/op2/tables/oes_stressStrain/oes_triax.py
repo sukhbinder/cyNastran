@@ -1,8 +1,32 @@
+## GNU Lesser General Public License
+## 
+## Program pyNastran - a python interface to NASTRAN files
+## Copyright (C) 2011-2012  Steven Doyle, Al Danial
+## 
+## Authors and copyright holders of pyNastran
+## Steven Doyle <mesheb82@gmail.com>
+## Al Danial    <al.danial@gmail.com>
+## 
+## This file is part of pyNastran.
+## 
+## pyNastran is free software: you can redistribute it and/or modify
+## it under the terms of the GNU Lesser General Public License as published by
+## the Free Software Foundation, either version 3 of the License, or
+## (at your option) any later version.
+## 
+## pyNastran is distributed in the hope that it will be useful,
+## but WITHOUT ANY WARRANTY; without even the implied warranty of
+## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+## GNU General Public License for more details.
+## 
+## You should have received a copy of the GNU Lesser General Public License
+## along with pyNastran.  If not, see <http://www.gnu.org/licenses/>.
+## 
 import sys
 from oes_objects import stressObject,strainObject #,array
 from pyNastran.op2.op2Errors import *
 
-class TriaxStressObject(stressObject):
+class ctriaxStressObject(stressObject):
     """
     # formatCode=1 sortCode=0 stressCode=0
                                       S T R E S S E S   I N   T R I A X 6   E L E M E N T S
@@ -11,7 +35,7 @@ class TriaxStressObject(stressObject):
        5351        0 -9.726205E+02 -1.678908E+03 -1.452340E+03 -1.325111E+02  -1.678908E+03  3.702285E+02  6.654553E+02
                 4389 -9.867789E+02 -1.624276E+03 -1.388424E+03 -9.212539E+01  -1.624276E+03  3.288099E+02  5.806334E+02
     """
-    def __init__(self,dataCode,isSort1,iSubcase,dt=None):
+    def __init__(self,dataCode,iSubcase,dt=None):
         stressObject.__init__(self,dataCode,iSubcase)
         self.eType = 'CTRIAX6'
         
@@ -24,18 +48,13 @@ class TriaxStressObject(stressObject):
         self.oms = {}
         self.ovm = {}
 
-        self.dt = dt
-        if isSort1:
-            if dt is not None:
-                self.add = self.addSort1
-                self.addNewEid = self.addNewEidSort1
-            ###
-        else:
-            assert dt is not None
-            self.add = self.addSort2
-            self.addNewEid = self.addNewEidSort2
+        if dt is not None:
+            self.isTransient = True
+            self.dt = self.nonlinearFactor
+            self.addNewTransient()
+            self.add = self.addTransient
+            self.addNewEid = self.addNewEidTransient
         ###
-
 
     def addF06Data(self,data,transient):
         raise Exception('Not Implemented')
@@ -84,19 +103,21 @@ class TriaxStressObject(stressObject):
         k.sort()
         return k
 
-    def addNewTransient(self,dt):
+    def addNewTransient(self):
         """
         initializes the transient variables
+        @note make sure you set self.dt first
         """
-        self.radial[dt]  = {}
-        self.azimuthal[dt] = {}
-        self.axial[dt] = {}
-        self.shear[dt] = {}
-        self.omax[dt] = {}
-        self.oms[dt] = {}
-        self.ovm[dt] = {}
+        if self.dt not in self.axial:
+            self.radial[self.dt]  = {}
+            self.azimuthal[self.dt] = {}
+            self.axial[self.dt] = {}
+            self.shear[self.dt] = {}
+            self.omax[self.dt] = {}
+            self.oms[self.dt] = {}
+            self.ovm[self.dt] = {}
 
-    def addNewEid(self,dt,eid,nid,rs,azs,As,ss,maxp,tmax,octs):
+    def addNewEid(self,eid,nid,rs,azs,As,ss,maxp,tmax,octs):
         #print "**?eid=%s loc=%s rs=%s azs=%s as=%s ss=%s maxp=%s tmx=%s octs=%s" %(eid,nid,rs,azs,As,ss,maxp,tmax,octs)
         self.radial[eid]    = {nid: rs}
         self.azimuthal[eid] = {nid: azs}
@@ -106,7 +127,7 @@ class TriaxStressObject(stressObject):
         self.oms[eid]       = {nid: tmax}
         self.ovm[eid]       = {nid: octs}
 
-    def add(self,dt,eid,nid,rs,azs,As,ss,maxp,tmax,octs):
+    def add(self,eid,nid,rs,azs,As,ss,maxp,tmax,octs):
         #print "***eid=%s loc=%s rs=%s azs=%s as=%s ss=%s maxp=%s tmx=%s octs=%s" %(eid,nid,rs,azs,As,ss,maxp,tmax,octs)
         self.radial[eid][nid]    = rs
         self.azimuthal[eid][nid] = azs
@@ -116,12 +137,11 @@ class TriaxStressObject(stressObject):
         self.oms[eid][nid]       = tmax
         self.ovm[eid][nid]       = octs
 
-    def addNewEidSort1(self,dt,eid,nid,rs,azs,As,ss,maxp,tmax,octs):
+    def addNewEidTransient(self,eid,nid,rs,azs,As,ss,maxp,tmax,octs):
+        dt = self.dt
         #assert isinstance(eid,int)
         #assert eid >= 0
         #print "*  eid=%s loc=%s rs=%s azs=%s as=%s ss=%s maxp=%s tmx=%s octs=%s" %(eid,nid,rs,azs,As,ss,maxp,tmax,octs)
-        if dt not in self.radial:
-            self.addNewTransient(dt)
         self.radial[dt][eid]    = {nid: rs}
         self.azimuthal[dt][eid] = {nid: azs}
         self.axial[dt][eid]     = {nid: As}
@@ -130,8 +150,9 @@ class TriaxStressObject(stressObject):
         self.oms[dt][eid]       = {nid: tmax}
         self.ovm[dt][eid]       = {nid: octs}
 
-    def addSort1(self,dt,eid,nid,rs,azs,As,ss,maxp,tmax,octs):
+    def addTransient(self,eid,nid,rs,azs,As,ss,maxp,tmax,octs):
         #print "***eid=%s loc=%s rs=%s azs=%s as=%s ss=%s maxp=%s tmx=%s octs=%s" %(eid,nid,rs,azs,As,ss,maxp,tmax,octs)
+        dt = self.dt
         self.radial[dt][eid][nid]    = rs
         self.azimuthal[dt][eid][nid] = azs
         self.axial[dt][eid][nid]     = As
@@ -140,9 +161,9 @@ class TriaxStressObject(stressObject):
         self.oms[dt][eid][nid]       = tmax
         self.ovm[dt][eid][nid]       = octs
 
-    def writeF06(self,header,pageStamp,pageNum=1,f=None,isMagPhase=False):
-        if self.nonlinearFactor is not None:
-            return self.writeF06Transient(header,pageStamp,pageNum,f)
+    def writeF06(self,header,pageStamp,pageNum=1):
+        if self.isTransient:
+            return self.writeF06Transient(header,pageStamp,pageNum)
 
         msg = header+['                                      S T R E S S E S   I N   T R I A X 6   E L E M E N T S\n',
                '   ELEMENT  GRID ID       STRESSES  IN  MATERIAL  COORD  SYSTEM                 MAX  MAG        MAX        VON MISES  \n',
@@ -151,7 +172,7 @@ class TriaxStressObject(stressObject):
               #'               4389 -9.867789E+02 -1.624276E+03 -1.388424E+03 -9.212539E+01  -1.624276E+03  3.288099E+02  5.806334E+02
 
         #out = []
-        for eid,radial in sorted(self.radial.iteritems()):
+        for eid,radial in sorted(self.radial.items()):
             for nid in sorted(radial):
                 rad   = self.radial[eid][nid]
                 azimuth  = self.azimuthal[eid][nid]
@@ -164,19 +185,16 @@ class TriaxStressObject(stressObject):
                     Eid=eid
                 else:
                     Eid=''
-                ([rad,azimuth,axial,shear,omax,oms,ovm],isAllZeros) = self.writeFloats13E([rad,azimuth,axial,shear,omax,oms,ovm])
+                ([rad,azimuth,axial,shear,omax,oms,ovm],isAllZeros) = self.writeF06Floats13E([rad,azimuth,axial,shear,omax,oms,ovm])
                 msg.append('  %8s %8s %s %s %s %s  %s %s %-s\n' %(Eid,nid,radial,azimuth,axial,shear,omax,oms,ovm.rstrip()))
             ###
             msg.append('\n')
         ###
 
         msg.append(pageStamp+str(pageNum)+'\n')
-        if f is not None:
-            f.write(''.join(msg))
-            msg = ['']
         return(''.join(msg),pageNum)
 
-    def writeF06Transient(self,header,pageStamp,pageNum=1,f=None,isMagPhase=False):
+    def writeF06Transient(self,header,pageStamp,pageNum=1):
         words = ['                                      S T R E S S E S   I N   T R I A X 6   E L E M E N T S\n',
                '   ELEMENT  GRID ID       STRESSES  IN  MATERIAL  COORD  SYSTEM                 MAX  MAG        MAX        VON MISES  \n',
                '      ID               RADIAL        AZIMUTHAL     AXIAL         SHEAR         PRINCIPAL       SHEAR\n',]
@@ -184,10 +202,10 @@ class TriaxStressObject(stressObject):
               #'               4389 -9.867789E+02 -1.624276E+03 -1.388424E+03 -9.212539E+01  -1.624276E+03  3.288099E+02  5.806334E+02
 
         msg = []
-        for dt,Radial in sorted(self.radial.iteritems()):
+        for dt,Radial in sorted(self.radial.items()):
             header[1] = ' %s = %10.4E\n' %(self.dataCode['name'],dt)
             msg += header+words
-            for eid,radial in sorted(Radial.iteritems()):
+            for eid,radial in sorted(Radial.items()):
                 for nid in sorted(radial):
                     rad   = self.radial[dt][eid][nid]
                     azimuth  = self.azimuthal[dt][eid][nid]
@@ -200,25 +218,19 @@ class TriaxStressObject(stressObject):
                         Eid=eid
                     else:
                         Eid=''
-                    ([rad,azimuth,axial,shear,omax,oms,ovm],isAllZeros) = self.writeFloats13E([rad,azimuth,axial,shear,omax,oms,ovm])
+                    ([rad,azimuth,axial,shear,omax,oms,ovm],isAllZeros) = self.writeF06Floats13E([rad,azimuth,axial,shear,omax,oms,ovm])
                     msg.append('  %8s %8s %s %s %s %s  %s %s %-s\n' %(Eid,nid,rad,azimuth,axial,shear,omax,oms,ovm.rstrip()))
                 ###
                 msg.append('\n')
             ###
 
             msg.append(pageStamp+str(pageNum)+'\n')
-            if f is not None:
-                f.write(''.join(msg))
-                msg = ['']
-            pageNum+=1
         return(''.join(msg),pageNum-1)
 
     def __repr__(self):
         return self.writeF06(['',''],'PAGE ',1)[0]
-        if self.nonlinearFactor is not None:
-            pass
 
-class TriaxStrainObject(strainObject):
+class ctriaxStrainObject(strainObject):
     """
     # formatCode=1 sortCode=0 stressCode=0
                                       S T R A I N S   I N   T R I A X 6   E L E M E N T S
@@ -227,10 +239,10 @@ class TriaxStrainObject(strainObject):
        5351        0 -9.726205E+02 -1.678908E+03 -1.452340E+03 -1.325111E+02  -1.678908E+03  3.702285E+02  6.654553E+02
                 4389 -9.867789E+02 -1.624276E+03 -1.388424E+03 -9.212539E+01  -1.624276E+03  3.288099E+02  5.806334E+02
     """
-    def __init__(self,dataCode,isSort1,iSubcase,dt=None):
+    def __init__(self,dataCode,iSubcase,dt=None):
         strainObject.__init__(self,dataCode,iSubcase)
         self.eType = 'CTRIAX6'
-
+        #raise NotImplementedError('CTRIAX6 strain...')
         self.code = [self.formatCode,self.sortCode,self.sCode]
         self.radial  = {}
         self.azimuthal = {}
@@ -240,18 +252,13 @@ class TriaxStrainObject(strainObject):
         self.ems = {}
         self.evm = {}
 
-        self.dt = dt
-        if isSort1:
-            if dt is not None:
-                self.add = self.addSort1
-                self.addNewEid = self.addNewEidSort1
-            ###
-        else:
-            assert dt is not None
-            self.add = self.addSort2
-            self.addNewEid = self.addNewEidSort2
+        if dt is not None:
+            self.isTransient = True
+            self.dt = self.nonlinearFactor
+            self.addNewTransient()
+            self.add = self.addTransient
+            self.addNewEid = self.addNewEidTransient
         ###
-
 
     def addF06Data(self,data,transient):
         raise Exception('Not Implemented')
@@ -273,19 +280,21 @@ class TriaxStrainObject(strainObject):
         k.sort()
         return k
 
-    def addNewTransient(self,dt):
+    def addNewTransient(self):
         """
         initializes the transient variables
+        @note make sure you set self.dt first
         """
-        self.radial[dt]  = {}
-        self.azimuthal[dt] = {}
-        self.axial[dt] = {}
-        self.shear[dt] = {}
-        self.emax[dt] = {}
-        self.ems[dt] = {}
-        self.evm[dt] = {}
+        if self.dt not in self.axial:
+            self.radial[self.dt]  = {}
+            self.azimuthal[self.dt] = {}
+            self.axial[self.dt] = {}
+            self.shear[self.dt] = {}
+            self.emax[self.dt] = {}
+            self.ems[self.dt] = {}
+            self.evm[self.dt] = {}
 
-    def addNewEid(self,dt,eid,nid,rs,azs,As,ss,maxp,tmax,octs):
+    def addNewEid(self,eid,nid,rs,azs,As,ss,maxp,tmax,octs):
         #print "**?eid=%s loc=%s rs=%s azs=%s as=%s ss=%s maxp=%s tmx=%s octs=%s" %(eid,nid,rs,azs,As,ss,maxp,tmax,octs)
         self.radial[eid]    = {nid: rs}
         self.azimuthal[eid] = {nid: azs}
@@ -295,7 +304,7 @@ class TriaxStrainObject(strainObject):
         self.ems[eid]       = {nid: emax}
         self.evm[eid]       = {nid: ects}
 
-    def add(self,dt,eid,nid,rs,azs,As,ss,maxp,emax,ects):
+    def add(self,eid,nid,rs,azs,As,ss,maxp,emax,ects):
         #print "***eid=%s loc=%s rs=%s azs=%s as=%s ss=%s maxp=%s tmx=%s octs=%s" %(eid,nid,rs,azs,As,ss,maxp,tmax,octs)
         self.radial[eid][nid]    = rs
         self.azimuthal[eid][nid] = azs
@@ -305,7 +314,8 @@ class TriaxStrainObject(strainObject):
         self.ems[eid][nid]       = emax
         self.evm[eid][nid]       = ects
 
-    def addNewEidSort1(self,dt,eid,nid,rs,azs,As,ss,maxp,emax,ects):
+    def addNewEidTransient(self,eid,nid,rs,azs,As,ss,maxp,emax,ects):
+        dt = self.dt
         #assert isinstance(eid,int)
         #assert eid >= 0
         #print "*  eid=%s loc=%s rs=%s azs=%s as=%s ss=%s maxp=%s tmx=%s octs=%s" %(eid,nid,rs,azs,As,ss,maxp,tmax,octs)
@@ -317,8 +327,9 @@ class TriaxStrainObject(strainObject):
         self.ems[dt][eid]       = {nid: emax}
         self.evm[dt][eid]       = {nid: ects}
 
-    def addSort1(self,dt,eid,nid,rs,azs,As,ss,maxp,emax,ects):
+    def addTransient(self,eid,nid,rs,azs,As,ss,maxp,emax,ects):
         #print "***eid=%s loc=%s rs=%s azs=%s as=%s ss=%s maxp=%s tmx=%s octs=%s" %(eid,nid,rs,azs,As,ss,maxp,tmax,octs)
+        dt = self.dt
         self.radial[dt][eid][nid]    = rs
         self.azimuthal[dt][eid][nid] = azs
         self.axial[dt][eid][nid]     = As
@@ -327,9 +338,9 @@ class TriaxStrainObject(strainObject):
         self.ems[dt][eid][nid]       = emax
         self.evm[dt][eid][nid]       = ects
 
-    def writeF06(self,header,pageStamp,pageNum=1,f=None,isMagPhase=False):
-        if self.nonlinearFactor is not None:
-            return self.writeF06Transient(header,pageStamp,pageNum,f)
+    def writeF06(self,header,pageStamp,pageNum=1):
+        if self.isTransient:
+            return self.writeF06Transient(header,pageStamp,pageNum)
 
         msg = header+['                                      S T R A I N S   I N   T R I A X 6   E L E M E N T S\n',
                '   ELEMENT  GRID ID       STRAINS  IN  MATERIAL  COORD  SYSTEM                 MAX  MAG        MAX        VON MISES  \n',
@@ -338,7 +349,7 @@ class TriaxStrainObject(strainObject):
               #'               4389 -9.867789E+02 -1.624276E+03 -1.388424E+03 -9.212539E+01  -1.624276E+03  3.288099E+02  5.806334E+02
 
         #out = []
-        for eid,radial in sorted(self.radial.iteritems()):
+        for eid,radial in sorted(self.radial.items()):
             for nid in sorted(radial):
                 rad   = self.radial[eid][nid]
                 azimuth  = self.azimuthal[eid][nid]
@@ -351,19 +362,16 @@ class TriaxStrainObject(strainObject):
                     Eid=eid
                 else:
                     Eid=''
-                ([rad,azimuth,axial,shear,emax,ems,evm],isAllZeros) = self.writeFloats13E([rad,azimuth,axial,shear,emax,ems,evm])
+                ([rad,azimuth,axial,shear,emax,ems,evm],isAllZeros) = self.writeF06Floats13E([rad,azimuth,axial,shear,emax,ems,evm])
                 msg.append('  %8s %8s %s %s %s %s  %s %s %-s\n' %(Eid,nid,radial,azimuth,axial,shear,emax,ems,evm.rstrip()))
             ###
             msg.append('\n')
         ###
 
         msg.append(pageStamp+str(pageNum)+'\n')
-        if f is not None:
-            f.write(''.join(msg))
-            msg = ['']
         return(''.join(msg),pageNum)
 
-    def writeF06Transient(self,header,pageStamp,pageNum=1,f=None,isMagPhase=False):
+    def writeF06Transient(self,header,pageStamp,pageNum=1):
         words = ['                                      S T R A I N S   I N   T R I A X 6   E L E M E N T S\n',
                '   ELEMENT  GRID ID       STRAINS  IN  MATERIAL  COORD  SYSTEM                 MAX  MAG        MAX        VON MISES  \n',
                '      ID               RADIAL        AZIMUTHAL     AXIAL         SHEAR         PRINCIPAL       SHEAR\n',]
@@ -371,10 +379,10 @@ class TriaxStrainObject(strainObject):
               #'               4389 -9.867789E+02 -1.624276E+03 -1.388424E+03 -9.212539E+01  -1.624276E+03  3.288099E+02  5.806334E+02
 
         msg = []
-        for dt,Radial in sorted(self.radial.iteritems()):
+        for dt,Radial in sorted(self.radial.items()):
             header[1] = ' %s = %10.4E\n' %(self.dataCode['name'],dt)
             msg += header+words
-            for eid,radial in sorted(Radial.iteritems()):
+            for eid,radial in sorted(Radial.items()):
                 for nid in sorted(radial):
                     rad   = self.radial[dt][eid][nid]
                     azimuth  = self.azimuthal[dt][eid][nid]
@@ -387,20 +395,14 @@ class TriaxStrainObject(strainObject):
                         Eid=eid
                     else:
                         Eid=''
-                    ([rad,azimuth,axial,shear,emax,ems,evm],isAllZeros) = self.writeFloats13E([rad,azimuth,axial,shear,emax,ems,evm])
+                    ([rad,azimuth,axial,shear,emax,ems,evm],isAllZeros) = self.writeF06Floats13E([rad,azimuth,axial,shear,emax,ems,evm])
                     msg.append('  %8s %8s %s %s %s %s  %s %s %-s\n' %(Eid,nid,rad,azimuth,axial,shear,emax,ems,evm.rstrip()))
                 ###
                 msg.append('\n')
             ###
 
             msg.append(pageStamp+str(pageNum)+'\n')
-            if f is not None:
-                f.write(''.join(msg))
-                msg = ['']
-            pageNum+=1
         return(''.join(msg),pageNum-1)
 
     def __repr__(self):
         return self.writeF06(['',''],'PAGE ',1)[0]
-        if self.nonlinearFactor is not None:
-            pass

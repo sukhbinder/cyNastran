@@ -1,14 +1,32 @@
+## GNU Lesser General Public License
+## 
+## Program pyNastran - a python interface to NASTRAN files
+## Copyright (C) 2011-2012  Steven Doyle, Al Danial
+## 
+## Authors and copyright holders of pyNastran
+## Steven Doyle <mesheb82@gmail.com>
+## Al Danial    <al.danial@gmail.com>
+## 
+## This file is part of pyNastran.
+## 
+## pyNastran is free software: you can redistribute it and/or modify
+## it under the terms of the GNU Lesser General Public License as published by
+## the Free Software Foundation, either version 3 of the License, or
+## (at your option) any later version.
+## 
+## pyNastran is distributed in the hope that it will be useful,
+## but WITHOUT ANY WARRANTY; without even the implied warranty of
+## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+## GNU General Public License for more details.
+## 
+## You should have received a copy of the GNU Lesser General Public License
+## along with pyNastran.  If not, see <http://www.gnu.org/licenses/>.
+## 
 import os
 from numpy import matrix
 from types import NoneType
 
-def getFilesOfType(dirname,extension='.txt',maxSize=100.):
-    """
-    gets all the files in the specified directory with a given extension
-    @param dirname the directory name
-    @param extension list of filetypes to get (default='.txt')
-    @param maxSize size in MB for max file size
-    """
+def getFilesOfType(dirname,extension='.txt'):
     files = os.listdir(dirname)
     files2 = []
     for fname in files:
@@ -16,10 +34,7 @@ def getFilesOfType(dirname,extension='.txt',maxSize=100.):
         #print f
         #print ext
         if extension in ext:
-            f = os.path.join(dirname,fname)
-            if os.path.getsize(f)/(1024.*1024.) <= maxSize: # convert to MB
-                files2.append(f)
-            ###
+            files2.append(os.path.join(dirname,fname))
         ###
     ###
     return files2

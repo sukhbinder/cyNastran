@@ -1,3 +1,27 @@
+## GNU Lesser General Public License
+## 
+## Program pyNastran - a python interface to NASTRAN files
+## Copyright (C) 2011-2012  Steven Doyle, Al Danial
+## 
+## Authors and copyright holders of pyNastran
+## Steven Doyle <mesheb82@gmail.com>
+## Al Danial    <al.danial@gmail.com>
+## 
+## This file is part of pyNastran.
+## 
+## pyNastran is free software: you can redistribute it and/or modify
+## it under the terms of the GNU Lesser General Public License as published by
+## the Free Software Foundation, either version 3 of the License, or
+## (at your option) any later version.
+## 
+## pyNastran is distributed in the hope that it will be useful,
+## but WITHOUT ANY WARRANTY; without even the implied warranty of
+## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+## GNU General Public License for more details.
+## 
+## You should have received a copy of the GNU Lesser General Public License
+## along with pyNastran.  If not, see <http://www.gnu.org/licenses/>.
+## 
 from __future__ import print_function
 import os
 import sys
@@ -456,35 +480,6 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
         isDone = self.foundEndData
         return ('BulkDataDeck',isDone)
 
-    def readBDF_Punch(self,infilename,includeDir=None,xref=True):
-        """
-        BDF punch file reader
-        @param infilename the input bdf
-        @param includeDir the relative path to any include files (default=None if no include files)
-        @param xref should the bdf be cross referenced (default=True)
-        """
-        self._setInfile(infilename,includeDir)
-
-        fname = self.printFileName(self.bdfFileName)
-        self.log.debug('---starting BDF.readBDF_Punch of %s---' %(fname))
-        #self.log.info('xref=%s' %(xref))
-        sys.stdout.flush()
-
-        #self.debug = True
-        if self.debug:
-            self.log.debug("*BDF.readBDF_Punch")
-        self.readBulkDataDeck()
-        #self.closeFile()
-        self.crossReference(xref=xref)
-        if self.debug:
-            self.log.debug("***BDF.readBDF_Punch")
-
-        self.log.debug('---finished BDF.readBDF_Punch of %s---' %(fname))
-        sys.stdout.flush()
-
-        isDone = self.foundEndData
-        return ('BulkDataDeck',isDone)
-
     def isExecutiveControlDeck(self,line):
         """@todo code this..."""
         return True
@@ -583,7 +578,7 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
        dictOfVars = {'varName': 10}
        """
        self.dictOfVars = {}
-       for key,value in dictOfVars.iteritems():
+       for key,value in dictOfVars.items():
            assert len(key)<=7,'max length for key is 7; len(%s)=%s' %(key,len(key))
            self.dictOfVars[key.upper()] = value
        ###
@@ -842,9 +837,9 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
 
         #self.debug = True
         if self.debug:
-            #for nid,node in self.nodes.iteritems():
+            #for nid,node in self.nodes.items():
                 #print node
-            #for eid,element in self.elements.iteritems():
+            #for eid,element in self.elements.items():
                 #print element
             
             #self.log.debug("\n$REJECTS")

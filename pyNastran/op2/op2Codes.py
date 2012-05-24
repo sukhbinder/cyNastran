@@ -1,3 +1,27 @@
+## GNU Lesser General Public License
+## 
+## Program pyNastran - a python interface to NASTRAN files
+## Copyright (C) 2011-2012  Steven Doyle, Al Danial
+## 
+## Authors and copyright holders of pyNastran
+## Steven Doyle <mesheb82@gmail.com>
+## Al Danial    <al.danial@gmail.com>
+## 
+## This file is part of pyNastran.
+## 
+## pyNastran is free software: you can redistribute it and/or modify
+## it under the terms of the GNU Lesser General Public License as published by
+## the Free Software Foundation, either version 3 of the License, or
+## (at your option) any later version.
+## 
+## pyNastran is distributed in the hope that it will be useful,
+## but WITHOUT ANY WARRANTY; without even the implied warranty of
+## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+## GNU General Public License for more details.
+## 
+## You should have received a copy of the GNU Lesser General Public License
+## along with pyNastran.  If not, see <http://www.gnu.org/licenses/>.
+## 
 from pyNastran.op2.op2Errors import *
 
 class Op2Codes(object):
@@ -239,8 +263,7 @@ class Op2Codes(object):
             232 : 'QUADRLC',
             233 : 'TRIARLC',
             234 : '???',
-            235 : 'CQUADR',  # was blank in DMAP, found reference in OEF table
-            236 : 'CTRIAR',  # was blank in DMAP, found reference in OEF table
+            235 : '???',
         }
         return elements[eCode] # +'_'+str(eCode)
 
@@ -323,15 +346,6 @@ class Op2Codes(object):
         if hasattr(self, 'thermal'):
             thermal = self.thermal 
 
-        stressWord = ''
-        if hasattr(self, 'stressBits'):
-            if self.isStress():#
-                stressWord = 'Stress'
-            else:
-                stressWord = 'Strain'
-            ###
-        ###
-
         elementType = None
         if hasattr(self, 'elementType'):
             elementType = self.elementType
@@ -373,7 +387,7 @@ class Op2Codes(object):
         else:                     sortWord2 = 'Real/Imaginary'
         if   self.sortBits[2]==0: sortWord3 = 'Sorted Responses'
         else:                     sortWord3 = 'Random Responses'
-    
+
         #if(  self.sortCode==0): sortWord = 'Real'
         #elif(self.sortCode==1): sortWord = 'Real/Imaginary'
         #elif(self.sortCode==2): sortWord = 'Random Responses'
@@ -416,26 +430,18 @@ class Op2Codes(object):
         elif(self.deviceCode==6):  device = "Plot and Punch"
         elif(self.deviceCode==7):  device = "Print, Plot, and Punch"
 
-        if thermal == 0:   ForceFlux = 'Force'
-        elif thermal==1:   ForceFlux = 'Flux'
-        else:              ForceFlux = 'Force (or Flux)'
-        
-        if thermal == 0:   DispTemp = 'Displacement'
-        elif thermal==1:   DispTemp = 'Temperature'
-        else:              DispTemp = 'Displacement/Temperature'
-        
         table = '???'
-        if(  self.tableCode== 1):  table = "OUG - %s vector/scalar" %(DispTemp)
+        if(  self.tableCode== 1):  table = "OUG - Displacement vector/scalar"
         elif(self.tableCode== 2):  table = "OPG - Load vector"
         elif(self.tableCode== 3):  table = "OQG - SPC Force vector"
-        elif(self.tableCode== 4):  table = "OEF - Element %s" %(ForceFlux)
-        elif(self.tableCode== 5):  table = "OES - Element %s" %(stressWord)
+        elif(self.tableCode== 4):  table = "OEF - Element Force (or Flux)"
+        elif(self.tableCode== 5):  table = "OES - Element Stress/Strain"
         elif(self.tableCode== 6):  table = "LAMA - Eigenvalue summary"
         elif(self.tableCode== 7):  table = "OUG - Eigenvector"
         elif(self.tableCode== 8):  table = "none - Grid point singularity table (obsolete)"
         elif(self.tableCode== 9):  table = "OEIGS - Eigenvalue analysis summary"
         elif(self.tableCode==10):  table = "OUG - Velocity vector"
-        elif(self.tableCode==11):  table = "OUG - Acceleration vector"
+        elif(self.tableCode==11):  table = "OUG -Acceleration vector"
         elif(self.tableCode==12):  table = "OPG - Nonlinear force vector"
         elif(self.tableCode==13):  table = "OGPWG - Grid point weight generator"
         elif(self.tableCode==14):  table = "OUG - Eigenvector (solution set)"
@@ -487,23 +493,6 @@ class Op2Codes(object):
         #print msg
         return msg
 
-    #----
-    def isThermal(self):
-        if self.thermal==0:
-            return False
-        elif self.thermal==1:
-            return True
-        return '???'
-
-    #----
-    # formatCode 3
-    def isMagnitudePhase(self):
-        if self.formatCode==3:
-            return True
-        return False
-
-    #----
-    # sortCode 0
     def isSort1(self):
         if self.sortBits[0]==0:
             return True
@@ -511,40 +500,3 @@ class Op2Codes(object):
 
     def isSort2(self):
         return not(self.isSort1())
-
-    #----
-    # sortCode 1
-    def isReal(self): # formatCode=1, this one is tricky b/c you can overwrite the Real code
-        #if self.formatCode==1:
-        #    return True
-        if self.sortBits[1]==0:
-            return True
-        return False
-
-    def isRealImaginary(self): # formatCode=2...does that dominate?
-        return not(self.isReal())
-
-    #----
-    # sortCode 2
-    def isSortedResponse(self):
-        if self.sortBits[2]==0:
-            return True
-        return False
-
-    def isRandomResponse(self):
-        return not(self.isSortedResponse())
-
-    #----
-    # combos
-    def isRealOrRandom(self):
-        return self.isReal() or self.isRandom()
-
-    def isRealImaginaryOrMagnitudePhase(self):
-        return self.isRealImaginary or self.MagnitudePhase()
-
-    #----
-    def isStress(self):
-        if self.stressBits[1]==0:
-            return True
-        return False
-

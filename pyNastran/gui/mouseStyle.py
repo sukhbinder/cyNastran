@@ -1,3 +1,27 @@
+## GNU Lesser General Public License
+## 
+## Program pyNastran - a python interface to NASTRAN files
+## Copyright (C) 2011-2012  Steven Doyle, Al Danial
+## 
+## Authors and copyright holders of pyNastran
+## Steven Doyle <mesheb82@gmail.com>
+## Al Danial    <al.danial@gmail.com>
+## 
+## This file is part of pyNastran.
+## 
+## pyNastran is free software: you can redistribute it and/or modify
+## it under the terms of the GNU Lesser General Public License as published by
+## the Free Software Foundation, either version 3 of the License, or
+## (at your option) any later version.
+## 
+## pyNastran is distributed in the hope that it will be useful,
+## but WITHOUT ANY WARRANTY; without even the implied warranty of
+## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+## GNU General Public License for more details.
+## 
+## You should have received a copy of the GNU Lesser General Public License
+## along with pyNastran.  If not, see <http://www.gnu.org/licenses/>.
+## 
 import vtk
 
 class MouseStyle(vtk.vtkInteractorStyleTrackballCamera):
@@ -81,37 +105,12 @@ class MouseStyle(vtk.vtkInteractorStyleTrackballCamera):
             self.pipeline.edgeMapper.Update()
             self.pipeline.edgeActor.Modified()
 
-        # Roll
         elif key=='o': # counter-clockwise
             camera.Roll(5.)
             self.Update()
         elif key=='O': # clockwise
             camera.Roll(-5.)
             self.Update()
-
-        # Yaw
-        #elif key=='a': # counter-clockwise
-            #camera.Yaw(5.)
-            #self.Update()
-        #elif key=='A': # clockwise
-            #camera.Yaw(-5.)
-            #self.Update()
-
-        # Elevation
-        #elif key=='v': # counter-clockwise
-            #camera.Elevation(5.)
-            #self.Update()
-        #elif key=='V': # clockwise
-            #camera.Elevation(-5.)
-            #self.Update()
-
-        # Pitch
-        #elif key=='c': # counter-clockwise
-            #camera.Pitch(5.)
-            #self.Update()
-        #elif key=='C': # clockwise
-            #camera.Pitch(-5.)
-            #self.Update()
 
         elif key=='x': # set x-axis
             camera.SetFocalPoint(0.,0.,0.)

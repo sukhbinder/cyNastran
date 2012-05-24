@@ -1,3 +1,27 @@
+## GNU Lesser General Public License
+## 
+## Program pyNastran - a python interface to NASTRAN files
+## Copyright (C) 2011-2012  Steven Doyle, Al Danial
+## 
+## Authors and copyright holders of pyNastran
+## Steven Doyle <mesheb82@gmail.com>
+## Al Danial    <al.danial@gmail.com>
+## 
+## This file is part of pyNastran.
+## 
+## pyNastran is free software: you can redistribute it and/or modify
+## it under the terms of the GNU Lesser General Public License as published by
+## the Free Software Foundation, either version 3 of the License, or
+## (at your option) any later version.
+## 
+## pyNastran is distributed in the hope that it will be useful,
+## but WITHOUT ANY WARRANTY; without even the implied warranty of
+## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+## GNU General Public License for more details.
+## 
+## You should have received a copy of the GNU Lesser General Public License
+## along with pyNastran.  If not, see <http://www.gnu.org/licenses/>.
+## 
 import sys
 from baseCard import BaseCard
 
@@ -98,7 +122,7 @@ class DOPTPRM(OptConstraint):
     
     def rawFields(self):
         fields = ['DOPTPRM']
-        for param,val in sorted(self.params.iteritems()):
+        for param,val in sorted(self.params.items()):
             fields += [param,val]
         return fields
 
@@ -202,7 +226,7 @@ class DRESP2(OptConstraint):
         del self.params['$NULL$']
 
         #print "--Params--"
-        #for key,valueList in sorted(self.params.iteritems()):
+        #for key,valueList in sorted(self.params.items()):
         #    print "  key=%s params=%s" %(key,valueList)
         
         #print self
@@ -227,7 +251,7 @@ class DRESP2(OptConstraint):
                         'DESVAR' : [1,0],
                      }
         fields = []
-        for key,valueList in sorted(self.params.iteritems()):
+        for key,valueList in sorted(self.params.items()):
             fields2 = [key]+valueList
             try:
                 (i,j) = packLength[key]

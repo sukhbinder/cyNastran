@@ -1,3 +1,27 @@
+## GNU Lesser General Public License
+## 
+## Program pyNastran - a python interface to NASTRAN files
+## Copyright (C) 2011-2012  Steven Doyle, Al Danial
+## 
+## Authors and copyright holders of pyNastran
+## Steven Doyle <mesheb82@gmail.com>
+## Al Danial    <al.danial@gmail.com>
+## 
+## This file is part of pyNastran.
+## 
+## pyNastran is free software: you can redistribute it and/or modify
+## it under the terms of the GNU Lesser General Public License as published by
+## the Free Software Foundation, either version 3 of the License, or
+## (at your option) any later version.
+## 
+## pyNastran is distributed in the hope that it will be useful,
+## but WITHOUT ANY WARRANTY; without even the implied warranty of
+## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+## GNU General Public License for more details.
+## 
+## You should have received a copy of the GNU Lesser General Public License
+## along with pyNastran.  If not, see <http://www.gnu.org/licenses/>.
+## 
 from pyNastran.bdf.cards.baseCard import BaseCard
 
 class ThermalCard(BaseCard):
@@ -16,9 +40,6 @@ class ThermalElement(ThermalCard):
     pid = 0
     def __init__(self,card,data):
         pass
-
-    def nodeIDs(self):
-        return []
 
     def Pid(self):
         if isinstance(self.pid,int):
@@ -715,7 +736,7 @@ class TEMP(ThermalLoad):
 
     def add(self,tempObj):
         assert self.sid==tempObj.sid
-        for gid,temp in self.tempObj.temperatures.iteritems():
+        for gid,temp in self.tempObj.temperatures.items():
             self.temperatures[gid] = temp
         ###
 
@@ -727,7 +748,7 @@ class TEMP(ThermalLoad):
         fields = ['TEMP',self.sid]
 
         nTemps = len(self.temperatures)-1
-        for i,(gid,temp) in enumerate(sorted(self.temperatures.iteritems())):
+        for i,(gid,temp) in enumerate(sorted(self.temperatures.items())):
             fields += [gid,temp]
             if i%3==2 and nTemps>i: # start a new TEMP card
                 fields += [None,'TEMP',self.sid]
@@ -765,7 +786,7 @@ class TEMPD(ThermalLoadDefault):
         ###
 
     def add(self,tempdObj):
-        for sid,tempd in self.tempdObj.temperatures.iteritems():
+        for sid,tempd in self.tempdObj.temperatures.items():
             self.temperatures[gid] = temp
         ###
 
@@ -779,7 +800,7 @@ class TEMPD(ThermalLoadDefault):
         nTemps = len(self.temperatures)-1
         #print "self.temperatures = ",self.temperatures
         #print "nTemps = ",nTemps
-        for i,(gid,temp) in enumerate(sorted(self.temperatures.iteritems())):
+        for i,(gid,temp) in enumerate(sorted(self.temperatures.items())):
             fields += [gid,temp]
             if i%4==3 and nTemps>i: # start a new TEMP card
                 fields += ['TEMPD']

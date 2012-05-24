@@ -1,5 +1,28 @@
+## GNU Lesser General Public License
+## 
+## Program pyNastran - a python interface to NASTRAN files
+## Copyright (C) 2011-2012  Steven Doyle, Al Danial
+## 
+## Authors and copyright holders of pyNastran
+## Steven Doyle <mesheb82@gmail.com>
+## Al Danial    <al.danial@gmail.com>
+## 
+## This file is part of pyNastran.
+## 
+## pyNastran is free software: you can redistribute it and/or modify
+## it under the terms of the GNU Lesser General Public License as published by
+## the Free Software Foundation, either version 3 of the License, or
+## (at your option) any later version.
+## 
+## pyNastran is distributed in the hope that it will be useful,
+## but WITHOUT ANY WARRANTY; without even the implied warranty of
+## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+## GNU General Public License for more details.
+## 
+## You should have received a copy of the GNU Lesser General Public License
+## along with pyNastran.  If not, see <http://www.gnu.org/licenses/>.
+## 
 import sys
-import copy
 from datetime import date
 
 import pyNastran
@@ -117,20 +140,12 @@ class F06Writer(object):
         """If this class is inherited, the PAGE stamp may be overwritten"""
         return makeStamp(Title)
 
-    def writeF06(self,f06OutName,isMagPhase=False,makeFile=True,deleteObjects=True):
+    def writeF06(self,f06OutName,makeFile=True):
         """
         Writes an F06 file based on the data we have stored in the object
-        @param self
-               the object pointer
-        @param f06OutName
-               the name of the F06 file to write
-        @param isMagPhase
-               should complex data be written using 
-               Magnitude/Phase instead of Real/Imaginary (default=False; Real/Imag)
-               Real objects don't use this parameter.
-        @param makeFile
-               True  -> makes a file, 
-               False -> makes a StringIO object for testing (default=True)
+        @param self the object pointer
+        @param f06OutName the name of the F06 file to write
+        @param makeFile True->makes a file, False->makes a StringIO object for testing (default=True)
         """
         if makeFile:
             f = open(f06OutName,'wb')
@@ -138,58 +153,41 @@ class F06Writer(object):
             import StringIO
             f = StringIO.StringIO()
 
-        #f.write(self.makeF06Header())
+        f.write(self.makeF06Header())
         pageStamp = self.makeStamp(self.Title)
         #print "pageStamp = |%r|" %(pageStamp)
         #print "stamp     = |%r|" %(stamp)
 
-        #isMagPhase = False
         pageNum = 1
         header = ['     DEFAULT                                                                                                                        \n',
                   '\n']
-        for iSubcase,result in sorted(self.eigenvalues.iteritems()): # goes first
+        for iSubcase,result in sorted(self.eigenvalues.items()): # goes first
             (subtitle,label) = self.iSubcaseNameMap[iSubcase]
             subtitle = subtitle.strip()
             header[0] = '     %s\n' %(subtitle)
             header[1] = '0                                                                                                            SUBCASE %i\n \n' %(iSubcase)
-            print result.__class__.__name__
-            (msg,pageNum) = result.writeF06(header,pageStamp,pageNum=pageNum,f=f,isMagPhase=isMagPhase)
-            if deleteObjects:
-                del result
-            ###
+            (msg,pageNum) = result.writeF06(header,pageStamp,pageNum=pageNum)
             f.write(msg)
             pageNum +=1
         
-        for iSubcase,result in sorted(self.eigenvectors.iteritems()): # has a special header
+        for iSubcase,result in sorted(self.eigenvectors.items()): # has a special header
             (subtitle,label) = self.iSubcaseNameMap[iSubcase]
             subtitle = subtitle.strip()
             header[0] = '     %s\n' %(subtitle)
             header[1] = '0                                                                                                            SUBCASE %i\n' %(iSubcase)
-            print result.__class__.__name__
-            (msg,pageNum) = result.writeF06(header,pageStamp,pageNum=pageNum,f=f,isMagPhase=isMagPhase)
-            if deleteObjects:
-                del result
-            ###
+            (msg,pageNum) = result.writeF06(header,pageStamp,pageNum=pageNum)
             f.write(msg)
             pageNum +=1
 
         # subcase name, subcase ID, transient word & value
-        headerOld = ['     DEFAULT                                                                                                                        \n',
+        header = ['     DEFAULT                                                                                                                        \n',
                   '\n',' \n']
-        header = copy.deepcopy(headerOld)
+
         resTypes = [
-                    self.displacements,self.displacementsPSD,self.displacementsATO,self.displacementsRMS,
-                    self.scaledDisplacements, # ???
-                    self.velocities,self.accelerations,self.eigenvectors,
-                    self.temperatures,
-                    self.loadVectors,self.thermalLoadVectors,
-                    self.forceVectors,
+                    self.displacements,self.temperatures,
+                    self.loadVectors,
 
                     self.spcForces,self.mpcForces,
-                    
-                    self.barForces,self.beamForces,self.springForces,self.damperForces,
-                    self.solidPressureForces,
-                    
                     self.rodStrain,self.nonlinearRodStress,self.barStrain,self.plateStrain,self.nonlinearPlateStrain,self.compositePlateStrain,self.solidStrain,
                     self.beamStrain,self.ctriaxStrain,self.hyperelasticPlateStress,
 
@@ -201,7 +199,7 @@ class F06Writer(object):
                     #self.shearStrain,self.shearStress,
                     
                     
-                    self.gridPointStresses,self.gridPointVolumeStresses,#self.gridPointForces,
+                    self.gridPointForces,
                     ]
 
         if 1:
@@ -210,23 +208,17 @@ class F06Writer(object):
                 (subtitle,label) = self.iSubcaseNameMap[iSubcase]
                 subtitle = subtitle.strip()
                 label = label.strip()
-                #print "label = ",label
-                header[0] = '     %-127s\n' %(subtitle)
-                header[1] = '0    %-72s                                SUBCASE %-15i\n' %(label,iSubcase)
-                #header[1] = '0    %-72s                                SUBCASE %-15i\n' %('',iSubcase)
+                header[0] = '     %s\n' %(subtitle)
+                header[1] = '0                                                                                                            SUBCASE %i\n' %(iSubcase)
                 for resType in resTypes:
                     if resType.has_key(iSubcase):
-                        header = copy.deepcopy(headerOld) # fixes bug in case
                         result = resType[iSubcase]
                         try:
-                            print result.__class__.__name__
-                            (msg,pageNum) = result.writeF06(header,pageStamp,pageNum=pageNum,f=f,isMagPhase=False)
+                            #print result.__class__.__name__
+                            (msg,pageNum) = result.writeF06(header,pageStamp,pageNum=pageNum)
                         except:
                             #print "result name = %s" %(result.name())
                             raise
-                        if deleteObjects:
-                            del result
-                        ###
                         f.write(msg)
                         pageNum +=1
                     ###
@@ -234,11 +226,8 @@ class F06Writer(object):
             ###
         if 0:
             for res in resTypes:
-                for iSubcase,result in sorted(res.iteritems()):
-                    (msg,pageNum) = result.writeF06(header,pageStamp,pageNum=pageNum,f=f,isMagPhase=False)
-                    if deleteObjects:
-                        del result
-                    ###
+                for iSubcase,result in sorted(res.items()):
+                    (msg,pageNum) = result.writeF06(header,pageStamp,pageNum=pageNum)
                     f.write(msg)
                     pageNum +=1
                 ###

@@ -1,8 +1,32 @@
+## GNU Lesser General Public License
+## 
+## Program pyNastran - a python interface to NASTRAN files
+## Copyright (C) 2011-2012  Steven Doyle, Al Danial
+## 
+## Authors and copyright holders of pyNastran
+## Steven Doyle <mesheb82@gmail.com>
+## Al Danial    <al.danial@gmail.com>
+## 
+## This file is part of pyNastran.
+## 
+## pyNastran is free software: you can redistribute it and/or modify
+## it under the terms of the GNU Lesser General Public License as published by
+## the Free Software Foundation, either version 3 of the License, or
+## (at your option) any later version.
+## 
+## pyNastran is distributed in the hope that it will be useful,
+## but WITHOUT ANY WARRANTY; without even the implied warranty of
+## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+## GNU General Public License for more details.
+## 
+## You should have received a copy of the GNU Lesser General Public License
+## along with pyNastran.  If not, see <http://www.gnu.org/licenses/>.
+## 
 from numpy import array
 from pyNastran.op2.resultObjects.op2_Objects import scalarObject
 
 class appliedLoadsObject(scalarObject): # approachCode=1, sortCode=0
-    def __init__(self,dataCode,isSort1,iSubcase,dt=None):
+    def __init__(self,dataCode,iSubcase,dt=None):
         scalarObject.__init__(self,dataCode,iSubcase)
         self.dt = dt
         
@@ -15,7 +39,7 @@ class appliedLoadsObject(scalarObject): # approachCode=1, sortCode=0
         self.moments = {}
         if self.dt is not None:
             assert dt>=0.
-            raise NotImplementedError('not implemented...')
+            raise Exception('not implemented...')
             self.eids    = {dt: []}
             self.sources = {dt: []}
             self.forces  = {dt: []}
@@ -81,7 +105,7 @@ class appliedLoadsObject(scalarObject): # approachCode=1, sortCode=0
         msg += '\n'
 
         msg += '-'*100+'\n'
-        for nodeID,forces in sorted(self.forces.iteritems()):
+        for nodeID,forces in sorted(self.forces.items()):
             for i in range(len(forces)):
                 force  = forces[i]
                 moment = self.moments[nodeID][i]

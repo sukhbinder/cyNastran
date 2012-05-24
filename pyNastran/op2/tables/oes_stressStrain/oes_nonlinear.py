@@ -1,10 +1,34 @@
+## GNU Lesser General Public License
+## 
+## Program pyNastran - a python interface to NASTRAN files
+## Copyright (C) 2011-2012  Steven Doyle, Al Danial
+## 
+## Authors and copyright holders of pyNastran
+## Steven Doyle <mesheb82@gmail.com>
+## Al Danial    <al.danial@gmail.com>
+## 
+## This file is part of pyNastran.
+## 
+## pyNastran is free software: you can redistribute it and/or modify
+## it under the terms of the GNU Lesser General Public License as published by
+## the Free Software Foundation, either version 3 of the License, or
+## (at your option) any later version.
+## 
+## pyNastran is distributed in the hope that it will be useful,
+## but WITHOUT ANY WARRANTY; without even the implied warranty of
+## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+## GNU General Public License for more details.
+## 
+## You should have received a copy of the GNU Lesser General Public License
+## along with pyNastran.  If not, see <http://www.gnu.org/licenses/>.
+## 
 import sys
 from math import isnan
+from oes_objects import stressObject,strainObject #,array
 from pyNastran.op2.op2Errors import *
-from real.oes_objects import stressObject,strainObject #,array
 
-class NonlinearQuadObject(stressObject):
-    def __init__(self,dataCode,isSort1,iSubcase,dt=None):
+class nonlinearQuadObject(stressObject):
+    def __init__(self,dataCode,iSubcase,dt=None):
         stressObject.__init__(self,dataCode,iSubcase)
         #self.eType = 'QUAD4FD' # or CTRIA3
         
@@ -24,18 +48,7 @@ class NonlinearQuadObject(stressObject):
         self.es  = {}
         self.eps = {}
         self.ecs = {}
-
         self.dt = dt
-        if isSort1:
-            if dt is not None:
-                self.add = self.addSort1
-                self.addNewEid = self.addNewEidSort1
-            ###
-        else:
-            assert dt is not None
-            self.add = self.addSort2
-            self.addNewEid = self.addNewEidSort2
-        ###
 
     def deleteTransient(self,dt):
         del self.fiberDistance[dt]
@@ -58,7 +71,8 @@ class NonlinearQuadObject(stressObject):
         k.sort()
         return k
 
-    def addNewTransient(self,dt):
+    def addNewTransient(self):
+        dt = self.dt
         self.fiberDistance[dt] = {}
         self.oxx[dt] = {}
         self.oyy[dt] = {}
@@ -74,9 +88,10 @@ class NonlinearQuadObject(stressObject):
         self.eps[dt] = {}
         self.ecs[dt] = {}
 
-    def addNewEidSort1(self,eType,dt,data):
+    def addNewEid(self,eType,data):
+        dt = self.dt
         if dt not in self.oxx:
-            self.addNewTransient(dt)
+            self.addNewTransient()
         (eid,fd,sx,sy,sz,txy,es,eps,ecs,ex,ey,ez,exy) = data
         self.fiberDistance[dt][eid] = [fd]
         if isnan(sz): sz = 0.
@@ -96,7 +111,8 @@ class NonlinearQuadObject(stressObject):
         self.eps[dt][eid] = [eps]
         self.ecs[dt][eid] = [ecs]
 
-    def addSort1(self,dt,data):
+    def add(self,data):
+        dt = self.dt
         (eid,fd,sx,sy,sz,txy,es,eps,ecs,ex,ey,ez,exy) = data
         self.fiberDistance[dt][eid].append(fd)
         if isnan(sz): sz = 0.
@@ -116,7 +132,7 @@ class NonlinearQuadObject(stressObject):
         self.eps[dt][eid].append(eps)
         self.ecs[dt][eid].append(ecs)
 
-    def writeF06(self,header,pageStamp,pageNum=1,f=None,isMagPhase=None):
+    def writeF06(self,header,pageStamp,pageNum=1):
         msgStart = ['      ELEMENT-ID =     129\n'
                     '               N O N L I N E A R   S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S    ( Q U A D 4 )\n'
                     ' \n',
@@ -125,10 +141,10 @@ class NonlinearQuadObject(stressObject):
 #0 5.000E-05  -5.000000E-01  -4.484895E+01  -1.561594E+02                 -2.008336E-02   1.392609E+02   0.0            0.0
         msgE = {}
         msgT = {}
-        for (dt,Oxxs) in sorted(self.oxx.iteritems()):
+        for (dt,Oxxs) in sorted(self.oxx.items()):
             header[1] = ' %s = %10.4E\n' %(self.dataCode['name'],dt)
 
-            for (eid,oxxs) in sorted(Oxxs.iteritems()):
+            for (eid,oxxs) in sorted(Oxxs.items()):
                 msgE[eid] = header+['      ELEMENT-ID = %8i\n' %(eid)]
                 if eid not in msgT:
                     msgT[eid] = []
@@ -147,7 +163,7 @@ class NonlinearQuadObject(stressObject):
                     es  = self.es[dt][eid][i]
                     eps = self.eps[dt][eid][i]
                     ecs = self.ecs[dt][eid][i]
-                    ([oxx,oyy,ozz,txy,exx,eyy,es,eps,ecs,exx,eyy,ezz,exy],isAllZeros) = self.writeFloats13E([oxx,oyy,ozz,txy,exx,eyy,es,eps,ecs,exx,eyy,ezz,exy])
+                    ([oxx,oyy,ozz,txy,exx,eyy,es,eps,ecs,exx,eyy,ezz,exy],isAllZeros) = self.writeF06Floats13E([oxx,oyy,ozz,txy,exx,eyy,es,eps,ecs,exx,eyy,ezz,exy])
                     if i==0:
                         msgT[eid].append(       '0 %9.3E %13s  %13s  %13s  %13s  %13s  %13s  %13s  %-s\n' %(dt,fd,oxx,oyy,ozz,txy,es,eps,ecs))
                     else:
@@ -157,7 +173,7 @@ class NonlinearQuadObject(stressObject):
             ###
         ###
         msg = []
-        for eid,e in sorted(msgE.iteritems()):
+        for eid,e in sorted(msgE.items()):
             msg += header+e+msgStart+msgT[eid]
             msg.append(pageStamp+str(pageNum)+'\n')
             pageNum+=1
@@ -168,8 +184,8 @@ class NonlinearQuadObject(stressObject):
         return self.writeF06([],'PAGE ',1)[0]
 
                 
-class HyperelasticQuadObject(stressObject):
-    def __init__(self,dataCode,isSort1,iSubcase,dt=None):
+class hyperelasticQuadObject(stressObject):
+    def __init__(self,dataCode,iSubcase,dt=None):
         stressObject.__init__(self,dataCode,iSubcase)
         self.eType = 'QUAD4FD'
         
@@ -182,18 +198,6 @@ class HyperelasticQuadObject(stressObject):
         self.angle = {}
         self.majorP = {}
         self.minorP = {}
-
-        self.dt = dt
-        if isSort1:
-            if dt is not None:
-                self.add = self.addSort1
-                self.addNewEid = self.addNewEidSort1
-            ###
-        else:
-            assert dt is not None
-            self.add = self.addSort2
-            self.addNewEid = self.addNewEidSort2
-        ###
 
     def deleteTransient(self,dt):
         del self.fiberDistance[dt]
@@ -210,7 +214,8 @@ class HyperelasticQuadObject(stressObject):
         k.sort()
         return k
 
-    def addNewTransient(self,dt):
+    def addNewTransient(self):
+        dt = self.dt
         self.oxx[dt] = {}
         self.oyy[dt] = {}
         self.txy[dt] = {}
@@ -218,9 +223,10 @@ class HyperelasticQuadObject(stressObject):
         self.majorP[dt] = {}
         self.minorP[dt] = {}
 
-    def addNewEidSort1(self,dt,data):
+    def addNewEid(self,data):
+        dt = self.dt
         if dt not in self.oxx:
-            self.addNewTransient(dt)
+            self.addNewTransient()
         (eid,Type,oxx,oyy,txy,angle,majorP,minorP) = data
         self.Type[eid] = Type
         self.oxx[dt] = {eid:[oxx]}
@@ -230,7 +236,8 @@ class HyperelasticQuadObject(stressObject):
         self.majorP[dt] = {eid:[majorP]}
         self.minorP[dt] = {eid:[minorP]}
 
-    def addSort1(self,dt,eid,data):
+    def add(self,eid,data):
+        dt = self.dt
         (ID,oxx,oyy,txy,angle,majorP,minorP) = data
         self.oxx[dt][eid].append(oxx)
         self.oyy[dt][eid].append(oyy)
@@ -239,17 +246,17 @@ class HyperelasticQuadObject(stressObject):
         self.majorP[dt][eid].append(majorP)
         self.minorP[dt][eid].append(minorP)
 
-    def writeF06(self,header,pageStamp,pageNum=1,f=None,isMagPhase=False):  ## @todo doesnt support CTRIA3NL (calls them CQUAD4s)
+    def writeF06(self,header,pageStamp,pageNum=1):  ## @todo doesnt support CTRIA3NL (calls them CQUAD4s)
         msg = ['           S T R E S S E S   I N   H Y P E R E L A S T I C   Q U A D R I L A T E R A L   E L E M E N T S  ( QUAD4FD )\n',
                '  ELEMENT     GRID/    POINT       ---------CAUCHY STRESSES--------             PRINCIPAL STRESSES (ZERO SHEAR)\n',
                '     ID       GAUSS      ID      NORMAL-X       NORMAL-Y      SHEAR-XY       ANGLE         MAJOR           MINOR\n',]
                #0       1     GAUS         1   7.318995E+00   6.367099E-01  -6.551054E+00   -31.4888    1.133173E+01   -3.376026E+00
                #                           2   1.097933E+01   4.149028E+00   6.278160E+00    30.7275    1.471111E+01    4.172537E-01
         
-        for dt,Oxxs in sorted(self.oxx.iteritems()):
+        for dt,Oxxs in sorted(self.oxx.items()):
             #header[-1] = '     LOAD STEP = %12.5E' %(dt)
             msg += header
-            for eid,oxxs in sorted(Oxxs.iteritems()):
+            for eid,oxxs in sorted(Oxxs.items()):
                 gauss = self.Type[eid]
                 oxx = self.oxx[dt][eid]
                 oyy = self.oyy[dt][eid]
@@ -272,8 +279,8 @@ class HyperelasticQuadObject(stressObject):
     def __repr__(self):
         return self.writeF06([],'PAGE ',1)[0]
 
-class NonlinearRodObject(stressObject):
-    def __init__(self,dataCode,isSort1,iSubcase,dt=None):
+class nonlinearRodObject(stressObject):
+    def __init__(self,dataCode,iSubcase,dt=None):
         stressObject.__init__(self,dataCode,iSubcase)
         #self.eType = 'CROD'
         self.eTypeMap = {89:'CRODNL',92:'CONRODNL'}
@@ -286,18 +293,7 @@ class NonlinearRodObject(stressObject):
         self.effectivePlasticCreepStrain = {}
         self.effectiveCreepStrain  = {}
         self.linearTorsionalStress = {}
-
         self.dt = dt
-        if isSort1:
-            if dt is not None:
-                self.add = self.addSort1
-                #self.addNewEid = self.addNewEidSort1
-            ###
-        else:
-            assert dt is not None
-            self.add = self.addSort2
-            #self.addNewEid = self.addNewEidSort2
-        ###
     
     def deleteTransient(self,dt):
         del self.axialStress[dt]
@@ -313,7 +309,8 @@ class NonlinearRodObject(stressObject):
         k.sort()
         return k
 
-    def addNewTransient(self,dt):
+    def addNewTransient(self):
+        dt = self.dt
         self.axialStress[dt] = {}
         self.equivStress[dt] = {}
         self.totalStrain[dt] = {}
@@ -321,9 +318,10 @@ class NonlinearRodObject(stressObject):
         self.effectiveCreepStrain[dt]  = {}
         self.linearTorsionalStress[dt] = {}
 
-    def addSort1(self,eType,dt,data):
+    def add(self,eType,data):
+        dt = self.dt
         if dt not in self.axialStress:
-            self.addNewTransient(dt)
+            self.addNewTransient()
         eid = data[0]
         self.eType[eid] = eType
         self.axialStress[dt][eid] = data[1]
@@ -334,7 +332,7 @@ class NonlinearRodObject(stressObject):
         self.linearTorsionalStress[dt][eid] = data[6]
         #print data
 
-    def writeF06(self,header,pageStamp,pageNum=1,f=None,isMagPhase=False):  ## @todo doesnt support CONROD/CTUBE (calls them CRODs)
+    def writeF06(self,header,pageStamp,pageNum=1):  ## @todo doesnt support CONROD/CTUBE (calls them CRODs)
         """
         ELEMENT-ID =     102
                                  N O N L I N E A R   S T R E S S E S   I N   R O D   E L E M E N T S      ( C R O D )
@@ -350,8 +348,8 @@ class NonlinearRodObject(stressObject):
                '                                         STRESS                             PLASTIC/NLELAST          STRAIN              STRESS\n']
         msgE = {}
         msgT = {}
-        for dt,axials in sorted(self.axialStress.iteritems()):
-            for eid,axial in sorted(axials.iteritems()):
+        for dt,axials in sorted(self.axialStress.items()):
+            for eid,axial in sorted(axials.items()):
                 eqs  = self.equivStress[dt][eid]
                 ts   = self.totalStrain[dt][eid]
                 epcs = self.effectivePlasticCreepStrain[dt][eid]
@@ -364,7 +362,7 @@ class NonlinearRodObject(stressObject):
                 msgT[eid].append('  %9.3E       %13.6E       %13.6E       %13.6E       %13.6E       %13.6E       %13.6E\n'%(dt,axial,eqs,ts,epcs,ecs,lts))
             ###
         ###
-        for eid,e in sorted(msgE.iteritems()):
+        for eid,e in sorted(msgE.items()):
             msg += header+[e]+msgStart+msgT[eid]
             msg.append(pageStamp+str(pageNum))
 

@@ -1,3 +1,27 @@
+## GNU Lesser General Public License
+## 
+## Program pyNastran - a python interface to NASTRAN files
+## Copyright (C) 2011-2012  Steven Doyle, Al Danial
+## 
+## Authors and copyright holders of pyNastran
+## Steven Doyle <mesheb82@gmail.com>
+## Al Danial    <al.danial@gmail.com>
+## 
+## This file is part of pyNastran.
+## 
+## pyNastran is free software: you can redistribute it and/or modify
+## it under the terms of the GNU Lesser General Public License as published by
+## the Free Software Foundation, either version 3 of the License, or
+## (at your option) any later version.
+## 
+## pyNastran is distributed in the hope that it will be useful,
+## but WITHOUT ANY WARRANTY; without even the implied warranty of
+## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+## GNU General Public License for more details.
+## 
+## You should have received a copy of the GNU Lesser General Public License
+## along with pyNastran.  If not, see <http://www.gnu.org/licenses/>.
+## 
 from numpy import array
 from pyNastran.bdf.cards.loads import *
 from pyNastran.bdf.errors import *
@@ -25,7 +49,7 @@ class bdfMethods(object):
         I  = array([0., 0., 0.,  0.,  0., 0.,])
         cg = array([0., 0., 0.])
         mass = 0.
-        for eid,element in self.elements.iteritems():
+        for eid,element in self.elements.items():
             try:
                 p = e.Centroid()  # not really coded across the board
                 m = e.Mass()
@@ -65,7 +89,7 @@ class bdfMethods(object):
         requires another fem
         """
         assert cid in self.coords,'cannot resolve nodes to cid=|%s| b/c it doesnt exist' %(cid)
-        for nid,node in sorted(self.nodes.iteritems()):
+        for nid,node in sorted(self.nodes.items()):
             p = node.PositionWRT(self,cid)
             #p = node.Position(self)
             #print "p = ",p
@@ -79,7 +103,7 @@ class bdfMethods(object):
         @param femOld the old model that hasnt lost it's connection to the node cids
         @warning hasnt been tested well...
         """
-        for nid,nodeOld in femOld.nodes.iteritems():
+        for nid,nodeOld in femOld.nodes.items():
             coord = femOld.node.cp
             p,matrix  = coord.transformToGlobal(self.xyz,debug=debug)
             p2 = coord.transformToLocal(p,matrix,debug=debug)
@@ -87,7 +111,7 @@ class bdfMethods(object):
         ###
 
     def sumForces(self):
-        for key,loadCase in self.loads.iteritems():
+        for key,loadCase in self.loads.items():
             F = array([0.,0.,0.])
             #print "loadCase = ",loadCase
             for load in loadCase:
@@ -102,7 +126,7 @@ class bdfMethods(object):
 
     def sumMoments(self,p0):
         p = array(p0)
-        for key,loadCase in self.loads.iteritems():
+        for key,loadCase in self.loads.items():
             M = array([0.,0.,0.])
             F = array([0.,0.,0.])
             #print "loadCase = ",loadCase

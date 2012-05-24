@@ -1,3 +1,27 @@
+## GNU Lesser General Public License
+## 
+## Program pyNastran - a python interface to NASTRAN files
+## Copyright (C) 2011-2012  Steven Doyle, Al Danial
+## 
+## Authors and copyright holders of pyNastran
+## Steven Doyle <mesheb82@gmail.com>
+## Al Danial    <al.danial@gmail.com>
+## 
+## This file is part of pyNastran.
+## 
+## pyNastran is free software: you can redistribute it and/or modify
+## it under the terms of the GNU Lesser General Public License as published by
+## the Free Software Foundation, either version 3 of the License, or
+## (at your option) any later version.
+## 
+## pyNastran is distributed in the hope that it will be useful,
+## but WITHOUT ANY WARRANTY; without even the implied warranty of
+## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+## GNU General Public License for more details.
+## 
+## You should have received a copy of the GNU Lesser General Public License
+## along with pyNastran.  If not, see <http://www.gnu.org/licenses/>.
+## 
 import sys
 
 #from numpy import zeros,dot
@@ -12,7 +36,7 @@ class ShellElement(Element):
         Element.__init__(self,card,data)
 
     def Area(self):
-        raise NotImplementedError('Area undefined for %s' %(self.type))
+        raise Exception('area undefined for %s' %(self.type))
 
     def Thickness(self):
         #raise Exception('area undefined for %s' %(self.type))
@@ -38,9 +62,6 @@ class ShellElement(Element):
         \f[ \large  mass = \frac{mass}{area} area  \f]
         """
         return self.pid.MassPerArea()*self.Area()
-
-    def flipNormal(self):
-        raise NotImplementedError('flipNormal undefined for %s' %(self.type))
 
     def crossReference(self,mesh):
         self.nodes = mesh.Nodes(self.nodes)
@@ -144,16 +165,6 @@ class CTRIA3(TriShell):
         self.prepareNodeIDs(nids)
         assert len(self.nodes)==3
 
-    def flipNormal(self):
-        """
-             1           1
-            * *   -->   * *
-           *   *       *   *
-          2-----3     3-----2
-        """
-        (n1,n2,n3) = self.nodes
-        self.nodes = [n1,n3,n2]
-
     def Interp(self,un):
         """
         Interpolation based on the area coordinates
@@ -247,18 +258,6 @@ class CTRIA6(TriShell):
     def Thickness(self):
         return self.pid.Thickness()
 
-    def flipNormal(self):
-        """
-             1                1
-             **               **
-            *  *             *  *
-           4    6   -->     6    4
-          *      *         *      *
-         2----5---3       3----5---2
-        """
-        (n1,n2,n3,n4,n5,n6) = self.nodes
-        self.nodes = [n1,n3,n2,n6,n5,n4]
-        
     def getReprDefaults(self):
         zOffset   = self.setBlankIfDefault(self.zOffset,0.0)
         TFlag     = self.setBlankIfDefault(self.TFlag,0)
@@ -302,16 +301,6 @@ class CTRIAR(TriShell):
 
     def Thickness(self):
         return self.pid.Thickness()
-
-    def flipNormal(self):
-        """
-             1           1
-            * *   -->   * *
-           *   *       *   *
-          2-----3     3-----2
-        """
-        (n1,n2,n3) = self.nodes
-        self.nodes = [n1,n3,n2]
 
     def getReprDefaults(self):
         zOffset   = self.setBlankIfDefault(self.zOffset,0.0)
@@ -395,17 +384,6 @@ class CTRIAX6(TriShell):
         if isinstance(self.mid,int):
             return self.mid
         return self.mid.mid
-
-    def flipNormal(self):
-        """
-             5               5
-            / \             / \
-           6   4   -->     6   4
-         /       \       /       \
-        1----2----3     1----2----3
-        """
-        (n1,n2,n3,n4,n5,n6) = self.nodes
-        self.nodes = [n1,n6,n5,n4,n3,n2]
 
     def rawFields(self):
         fields = ['CTRIAX6',self.eid,self.Mid(),self.Pid()]+self.nodeIDs()+[
@@ -532,16 +510,6 @@ class QuadShell(ShellElement):
         fields2 = ['CTRIA3',newID,   self.mid1]+nodes2+[self.thetaMcid,zOffset]
         return self.printCard(fields1)+printCard(fields2)
 
-    def flipNormal(self):
-        """
-        1---2        1---4
-        |   |  -->   |   |
-        |   |        |   |
-        4---3        2---3
-        """
-        (n1,n2,n3,n4) = self.nodes
-        self.nodes = [n1,n4,n3,n2]
-
     def getReprDefaults(self,debug=False):
         zOffset   = self.setBlankIfDefault(self.zOffset,0.0)
         TFlag     = self.setBlankIfDefault(self.TFlag,0)
@@ -649,16 +617,6 @@ class CSHEAR(QuadShell):
         return area
     ###
 
-    def flipNormal(self):
-        """
-        1---2        1---4
-        |   |  -->   |   |
-        |   |        |   |
-        4---3        2---3
-        """
-        (n1,n2,n3,n4) = self.nodes
-        self.nodes = [n1,n4,n3,n2]
-
     def rawFields(self):
         fields = ['CSHEAR',self.eid,self.Pid()]+self.nodeIDs()
         return fields
@@ -719,16 +677,6 @@ class CQUAD4(QuadShell):
             #print str(self)
             #sys.exit()
         
-    def flipNormal(self):
-        """
-        1---2        1---4
-        |   |  -->   |   |
-        |   |        |   |
-        4---3        2---3
-        """
-        (n1,n2,n3,n4) = self.nodes
-        self.nodes = [n1,n4,n3,n2]
-
     def rawFields(self):
         fields = [self.type,self.eid,self.Pid()]+self.nodeIDs()+[self.thetaMcid,self.zOffset,self.TFlag,self.T1,self.T2,self.T3,self.T4]
         return fields
@@ -792,26 +740,13 @@ class CQUADR(QuadShell):
     def Thickness(self):
         return self.pid.Thickness()
 
-    def flipNormal(self):
-        """
-        1---2        1---4
-        |   |  -->   |   |
-        |   |        |   |
-        4---3        2---3
-        """
-        (n1,n2,n3,n4) = self.nodes
-        self.nodes = [n1,n4,n3,n2]
-
     def rawFields(self):
         fields = ['CQUADR',self.eid,self.Pid()]+self.nodeIDs()+[self.thetaMcid,self.zOffset,
                   None,self.TFlag,self.T1,self.T2,self.T3,self.T4,]
         return fields
 
     def reprFields(self):
-        (thetaMcid,zOffset,TFlag,T1,T2,T3,T4) = self.getReprDefaults()
-        fields = ['CQUADR',self.eid,self.Pid()]+self.nodeIDs()+[thetaMcid,zOffset,
-                  None,TFlag,T1,T2,T3,T4]
-        return fields
+        return self.rawFields()
 
 class CQUAD(QuadShell):
     type = 'CQUAD'
@@ -836,17 +771,6 @@ class CQUAD(QuadShell):
 
     def Thickness(self):
         return self.pid.Thickness()
-
-    def flipNormal(self):
-        """
-        1--5--2        1--8--4
-        |     |  -->   |     |
-        8  9  6        5  9  7
-        |     |        |     |
-        4--7--3        2--6--3
-        """
-        (n1,n2,n3,n4,n5,n6,n7,n8,n9) = self.nodes
-        self.nodes = [n1,n4,n3,n2,  n8,n7,n6,n5,  n9]
 
     def rawFields(self):
         fields = ['CQUAD',self.eid,self.Pid()]+self.nodeIDs()
@@ -897,16 +821,6 @@ class CQUAD8(QuadShell):
     def Thickness(self):
         return self.pid.Thickness()
 
-        """
-        1--5--2        1--8--4
-        |     |  -->   |     |
-        8     6        5     7
-        |     |        |     |
-        4--7--3        2--6--3
-        """
-        (n1,n2,n3,n4,n5,n6,n7,n8) = self.nodes
-        self.nodes = [n1,n4,n3,n2,  n8,n7,n6,n5]
-
     def rawFields(self):
         fields = ['CQUAD8',self.eid,self.Pid()]+self.nodeIDs()+[
                   self.T1,self.T2,self.T3,self.T4,self.thetaMcid,self.zOffset,
@@ -934,17 +848,6 @@ class CQUADX(QuadShell):
 
     def Thickness(self):
         return self.pid.Thickness()
-
-    def flipNormal(self):
-        """
-        1--5--2        1--8--4
-        |     |  -->   |     |
-        8  9  6        5  9  7
-        |     |        |     |
-        4--7--3        2--6--3
-        """
-        (n1,n2,n3,n4,n5,n6,n7,n8,n9) = self.nodes
-        self.nodes = [n1,n4,n3,n2,  n8,n7,n6,n5,  n9]
 
     def rawFields(self):
         fields = ['CQUADX',self.eid,self.Pid()]+self.nodeIDs()

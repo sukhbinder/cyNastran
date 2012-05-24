@@ -1,3 +1,27 @@
+## GNU Lesser General Public License
+## 
+## Program pyNastran - a python interface to NASTRAN files
+## Copyright (C) 2011-2012  Steven Doyle, Al Danial
+## 
+## Authors and copyright holders of pyNastran
+## Steven Doyle <mesheb82@gmail.com>
+## Al Danial    <al.danial@gmail.com>
+## 
+## This file is part of pyNastran.
+## 
+## pyNastran is free software: you can redistribute it and/or modify
+## it under the terms of the GNU Lesser General Public License as published by
+## the Free Software Foundation, either version 3 of the License, or
+## (at your option) any later version.
+## 
+## pyNastran is distributed in the hope that it will be useful,
+## but WITHOUT ANY WARRANTY; without even the implied warranty of
+## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+## GNU General Public License for more details.
+## 
+## You should have received a copy of the GNU Lesser General Public License
+## along with pyNastran.  If not, see <http://www.gnu.org/licenses/>.
+## 
 from types import NoneType
 from numpy import allclose,isinf
 
@@ -42,7 +66,7 @@ def printScientific8(value):
     @see printFloat for a better method
     """
     #print "scientific...%s" %(value)
-    pythonValue = '%8.11e' %(value)
+    pythonValue = '%8.6e' %(value)
     #print "pythonValue = ",pythonValue
     svalue,sExponent = pythonValue.strip().split('e')
     exponent = int(sExponent) # removes 0s
@@ -58,7 +82,7 @@ def printScientific8(value):
     value2 = float(svalue)
     #lenSValue = len(svalue)
     
-    lenSExp  = len(sExp2)+1 # the plus 1 is for the sign
+    lenSExp   = len(sExp2)+1 # the plus 1 is for the sign
     leftover = 8-lenSExp
     
     svalue2 = svalue.strip('0')
@@ -87,11 +111,10 @@ def printScientific8(value):
 
 def printFloat8(value,tol=0.):
     """
-    Prints a float in nastran 8-character width syntax
+    Prints a float in nastran 8-character width syntax.
     using the highest precision possbile.
     @todo bad for small values...positive or negative...
-    @warning hasnt really be tested for tolerancing
-    """
+    @warning hasnt really be tested for tolerancing    """
     #value = round(value,4)
     #print "float...%s" %value
     if abs(value)<=tol:  # tol=1e-8
@@ -107,28 +130,42 @@ def printFloat8(value,tol=0.):
                 return field
             elif value<0.001:
                 #print "A"
-                #print value
-                field = printScientific8(value)
-                field2 = "%8.7f" %(value) # small value
-                field2 = field2.strip('0 ')
+                if 1:
+                    #print value
+                    field = printScientific8(value)
+                    field2 = "%8.7f" %(value) # small value
+                    field2 = field2.strip('0 ')
 
-                #if 'e' not in field:
-                field1 = field.replace('-','e-')
+                    #if 'e' not in field:
+                    field1 = field.replace('-','e-')
 
-                #print "value=|%s| field1=|%s| field2=|%s|" %(value,field,field2)
-                #print "same - ",float(field1)==float(field2)
-                if field2=='.':
-                    return "%8s" %(field)
-                if len(field2)<=8 and float(field1)==float(field2):
-                    field = field2
-                    #print "*field = ",field
-                    field = field.strip(' 0')
+                    #print "value=|%s| field1=|%s| field2=|%s|" %(value,field,field2)
+                    #print "same - ",float(field1)==float(field2)
+                    if field2=='.':
+                        return "%8s" %(field)
+                    if len(field2)<=8 and float(field1)==float(field2):
+                        field = field2
+                        #print "*field = ",field
+                        field = field.strip(' 0')
 
-                    #print "AA"
-                    #print "field  = ",field
-                    #print "field1 = ",field1
-                    #print "field2 = ",field2
-                    #print ""
+                        #print "AA"
+                        #print "field  = ",field
+                        #print "field1 = ",field1
+                        #print "field2 = ",field2
+                        #print ""
+                    ###
+                ###
+                if 0:
+                    field = "%8.7f" %(value)
+                    #print "field = ",field
+                    field = field.strip('0')
+                    if len(field)<8:
+                        assert '.' == field[0],field
+                    else:
+                        field = printScientific8(value)
+                        return field
+                    ###
+                    #print "field = ",field
                 ###
             elif value<0.1:
                 #print "B*"
@@ -149,7 +186,6 @@ def printFloat8(value,tol=0.):
                 if field.index('.')<8:
                     field = '%8.1f' %(round(value))
                     field = field[0:8]
-                    #field = '%7s.' %(int(field))
                     assert '.' != field[0],field
                 else:
                     field = printScientific8(value)
@@ -175,8 +211,9 @@ def printFloat8(value,tol=0.):
                 #print "value=%s field=%s field1=%s field2=%s" %(value,field[1:],field1,field2)
                 #print "same - ",float(field1)==float(field2)
                 if len(field2)<=8 and float(field1)==float(field2):
-                    field = field2.rstrip(' 0')
-                    field = field.replace('-0.','-.')
+                    field = field2
+                    #print "*field = ",field
+                    field = field.strip(' 0')
 
                     #print "AA"
                     #print "field  = ",field
@@ -204,7 +241,7 @@ def printFloat8(value,tol=0.):
             else:
                 field = "%8.1f" %(value)
                 if field.index('.')<8:
-                    field = '%7s.' %(int(round(value,0)))
+                    field = field[0:8]
                     assert '.' != field[0],field
                 else:
                     field = printScientific8(value)
@@ -224,8 +261,7 @@ def printField(value,tol=0.):
     """
     prints a single 8-character width field
     @param value the value to print
-    @param tol the abs(tol) to consider value=0 (default=0.)
-    @retval field an 8-character (tested) string
+    @param tol the abs(tol) to consider value=0 (default=0.)    @retval field an 8-character (tested) string
     """
     if isinstance(value,int):
         field = "%8s" %(value)
@@ -239,12 +275,9 @@ def printField(value,tol=0.):
     assert len(field)==8,'field=|%s| is not 8 characters long...rawValue=|%s|' %(field,value)
     return field
 
-#def printCard(fields,size=8,tol=0.):
+#def printCard(fields,size=8):
     #"""
     #prints a nastran-style card with 8 or 16-character width fields
-    #@param fields all the fields in the BDF card (no blanks)
-    #@param tol the abs(tol) to consider value=0 (default=0.)
-    #@param size the width of a field (size=8 or 16)
     #@warning 8 or 16 is required, but 16 is not checked for
     #"""
     #if size==8:
@@ -256,8 +289,7 @@ def printField(value,tol=0.):
 def printCard(fields,tol=0.):
     """
     Prints a nastran-style card with 8-character width fields.
-    @param fields all the fields in the BDF card (no blanks)
-    @param tol the abs(tol) to consider value=0 (default=0.)
+    
     @note A small field format follows the  8-8-8-8-8-8-8-8 = 80
     format where the first 8 is the card name or blank (continuation).
     The last 8-character field indicates an optional continuation,
@@ -364,7 +396,3 @@ if __name__=='__main__':
     #print printField(-5.007e-3)
     
 
-    #print printField(1.60665017692e-09)
-    #print printField(3.22614998029e-08)
-    #print printField(1.33564999731e-09)
-    print printField(-0.00082999792)

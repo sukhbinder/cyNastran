@@ -1,3 +1,27 @@
+## GNU Lesser General Public License
+## 
+## Program pyNastran - a python interface to NASTRAN files
+## Copyright (C) 2011-2012  Steven Doyle, Al Danial
+## 
+## Authors and copyright holders of pyNastran
+## Steven Doyle <mesheb82@gmail.com>
+## Al Danial    <al.danial@gmail.com>
+## 
+## This file is part of pyNastran.
+## 
+## pyNastran is free software: you can redistribute it and/or modify
+## it under the terms of the GNU Lesser General Public License as published by
+## the Free Software Foundation, either version 3 of the License, or
+## (at your option) any later version.
+## 
+## pyNastran is distributed in the hope that it will be useful,
+## but WITHOUT ANY WARRANTY; without even the implied warranty of
+## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+## GNU General Public License for more details.
+## 
+## You should have received a copy of the GNU Lesser General Public License
+## along with pyNastran.  If not, see <http://www.gnu.org/licenses/>.
+## 
 import os
 import sys
 import time
@@ -34,7 +58,7 @@ def parseSkippedCards(fname):
         ###
     
     filesToAnalyze = []
-    for (key,value) in sorted(results.iteritems()):
+    for (key,value) in sorted(results.items()):
         #print key,value
         filesToAnalyze.append(value)
     
@@ -44,28 +68,12 @@ def parseSkippedCards(fname):
     f.close()
     return filesToAnalyze
 
-def getAllFiles(foldersFile,fileType):
-    f = open(foldersFile,'r')
-    lines = f.readlines()
-    files2 = []
-    for line in lines:
-        moveDir = os.path.join('r"'+line.strip()+'"')
-        moveDir = line.strip()
-        if moveDir:
-            print "moveDir = ",moveDir
-            assert os.path.exists(moveDir),'%s doesnt exist' %(moveDir)
-            files2 += getFilesOfType(moveDir,fileType,maxSize=100.)
-        ###
-    ###
-    return files2
-
 if __name__=='__main__':
     # works
     files = getFilesOfType('tests','.op2')
     
     #moveDir = r'D:\work\move\hard_demo'
-    #moveDir = r'D:\work\move\move_tpl'
-    foldersFile = 'tests/foldersRead.txt'
+    moveDir = r'D:\work\move\move_tpl'
     #moveDir = r'D:\work\move\solid_shell_bar'
     #files2 = ['ann6611.op2']
 
@@ -73,20 +81,15 @@ if __name__=='__main__':
     debug     = False
     makeGeom  = False
     writeBDF  = False
-    writeF06  = True
-    writeMatlab = True
-    printResults = False
-
-    deleteF06 = True
     saveCases = True
-    regenerate = False
+    regenerate = True
     stopOnFailure = False
     getSkipCards = False
 
     if getSkipCards:
         files2 = parseSkippedCards('skippedCards.out')
     elif regenerate:
-        files2 = getAllFiles(foldersFile,'.op2')
+        files2 = getFilesOfType(moveDir,'.op2')
         files2 += files
     else:
         files2 = getFailedFiles('failedCases.in')
@@ -100,8 +103,7 @@ if __name__=='__main__':
     
     #            HIS, R1B        EQEXIN
     #skipFiles = ['accopt3.op2','acms111m.op2','adjoint.op2','aerobeam.op2',] # tpl
-    skipFiles = ['nltrot99.op2','rot12901.op2','plan20s.op2'] # giant
-    #skipFiles = []
+    skipFiles = ['nltrot99.op2','rot12901.op2'] # giant
     #print files
 
     nStart = 0
@@ -112,8 +114,8 @@ if __name__=='__main__':
         pass
 
     print "nFiles = ",len(files)
-    runLotsOfFiles(files,makeGeom,writeBDF,writeF06,writeMatlab,deleteF06,printResults,debug,saveCases,skipFiles,stopOnFailure,nStart,nStop)
+    runLotsOfFiles(files,makeGeom,writeBDF,debug,saveCases,skipFiles,stopOnFailure,nStart,nStop)
     #runLotsOfFiles(files,makeGeom,writeBDF,debug,saveCases,stopOnFailure,nStart,nStop)
     sys.exit('final stop...')
-    
+
 

@@ -1,3 +1,27 @@
+## GNU Lesser General Public License
+## 
+## Program pyNastran - a python interface to NASTRAN files
+## Copyright (C) 2011-2012  Steven Doyle, Al Danial
+## 
+## Authors and copyright holders of pyNastran
+## Steven Doyle <mesheb82@gmail.com>
+## Al Danial    <al.danial@gmail.com>
+## 
+## This file is part of pyNastran.
+## 
+## pyNastran is free software: you can redistribute it and/or modify
+## it under the terms of the GNU Lesser General Public License as published by
+## the Free Software Foundation, either version 3 of the License, or
+## (at your option) any later version.
+## 
+## pyNastran is distributed in the hope that it will be useful,
+## but WITHOUT ANY WARRANTY; without even the implied warranty of
+## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+## GNU General Public License for more details.
+## 
+## You should have received a copy of the GNU Lesser General Public License
+## along with pyNastran.  If not, see <http://www.gnu.org/licenses/>.
+## 
 from numpy import zeros,array
 
 from pyNastran.bdf.cards.baseCard import Element
@@ -70,17 +94,6 @@ class CMASS2(PointElement):
             self.c1   = data[4]
             self.c2   = data[5]
         ###
-
-    def nodeIDs(self):
-        g1 = self.G1()
-        g2 = self.G2()
-        nodes = []
-        if g1:
-            nodes.append(g1)
-        if g2:
-            nodes.append(g2)
-        print nodes
-        return nodes
 
     def Mass(self):
         return self.mass
@@ -299,9 +312,6 @@ class CONM1(PointElement):
         ###
         self.massMatrix = m
 
-    def nodeIDs(self):
-        return [self.Nid()]
-
     def Nid(self):
         if isinstance(self.nid,int):
             return self.nid
@@ -341,12 +351,7 @@ class CONM1(PointElement):
 
 class CONM2(PointElement): ## @todo not done
     """
-    @param self the CONM2 object
-    @param eid element ID
-    @param nid node ID
-    @param cid coordinate frame of the offset (-1=absolute coordinates)
-    @param X offset vector
-    @param I mass moment of inertia matrix about the CG
+    @todo support cid != 0
     """
     type = 'CONM2'
     # 'CONM2    501274  11064          132.274'
@@ -372,30 +377,14 @@ class CONM2(PointElement): ## @todo not done
         ###
 
     def Mass(self):
+        if self.cid==0:
+            raise NotImplementedError('cid=0 is not supported for CONM2...')
         return self.mass
 
-    def Inertia(self):
-        """
-        Returns the 3x3 inertia matrix
-        @warning doesnt handle offsets or coordinate systems
-        """
-        I = self.I
-        A = [ [ I[0],I[1],I[3] ],
-              [ I[1],I[2],I[4] ],
-              [ I[3],I[4],I[5] ]]
-        if self.Cid()==-1:
-            return A
-        else:
-            # transform to global
-            dx,matrix = self.cid.transformToGlobal(self.X)
-            raise NotImplementedError()
-            A2 = A*matrix
-            return A2 # correct for offset using dx???
-
     def Centroid(self):
-        if self.Cid()==0:
-            X2  = self.nid.Position()+self.X
-        elif self.Cid()==-1:
+        if self.cid==0:
+            raise NotImplementedError('cid=0 is not supported for CONM2...')
+        if self.cid==-1:
             return self.X
         else:
             dx,matrix = self.cid.transformToGlobal(self.X)
@@ -405,12 +394,12 @@ class CONM2(PointElement): ## @todo not done
         return X2
 
     def crossReference(self,model):
-        if self.Cid()!=-1:
+        """
+        @warning only supports cid=0
+        """
+        if self.cid!=-1:
             self.cid = model.Coord(self.cid)
         self.nid = model.Node(self.nid)
-
-    def nodeIDs(self):
-        return [self.Nid()]
 
     def Nid(self):
         if isinstance(self.nid,int):

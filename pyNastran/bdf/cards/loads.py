@@ -1,3 +1,27 @@
+## GNU Lesser General Public License
+## 
+## Program pyNastran - a python interface to NASTRAN files
+## Copyright (C) 2011-2012  Steven Doyle, Al Danial
+## 
+## Authors and copyright holders of pyNastran
+## Steven Doyle <mesheb82@gmail.com>
+## Al Danial    <al.danial@gmail.com>
+## 
+## This file is part of pyNastran.
+## 
+## pyNastran is free software: you can redistribute it and/or modify
+## it under the terms of the GNU Lesser General Public License as published by
+## the Free Software Foundation, either version 3 of the License, or
+## (at your option) any later version.
+## 
+## pyNastran is distributed in the hope that it will be useful,
+## but WITHOUT ANY WARRANTY; without even the implied warranty of
+## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+## GNU General Public License for more details.
+## 
+## You should have received a copy of the GNU Lesser General Public License
+## along with pyNastran.  If not, see <http://www.gnu.org/licenses/>.
+## 
 #import sys
 from numpy import array,cross
 from numpy.linalg import norm
@@ -87,16 +111,10 @@ class GRAV(BaseCard):
         return p
 
     def rawFields(self):
-        fields = ['GRAV',self.sid,self.Cid(),self.a,self.N[0],self.N[1],self.N[2],self.mb]
-        return fields
-
-    def reprFields(self):
         N = []
         for n in self.N:
             N.append(self.setBlankIfDefault(n,0.0))
-        
-        mb = self.setBlankIfDefault(self.mb,0)
-        fields = ['GRAV',self.sid,self.Cid(),self.a]+N+[mb]
+        fields = ['GRAV',self.sid,self.Cid(),self.a]+N+[self.mb]
         return fields
 
 class LSEQ(BaseCard): # Requires LOADSET in case control deck
@@ -220,7 +238,7 @@ class LOAD(Load):
         msg += "                                   DZ=0.0,),),\n"
 
         mags = {}
-        for node,load in sorted(forceLoads.iteritems()):
+        for node,load in sorted(forceLoads.items()):
             pass
         return msg
 

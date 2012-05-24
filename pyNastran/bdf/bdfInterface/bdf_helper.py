@@ -1,3 +1,27 @@
+## GNU Lesser General Public License
+## 
+## Program pyNastran - a python interface to NASTRAN files
+## Copyright (C) 2011-2012  Steven Doyle, Al Danial
+## 
+## Authors and copyright holders of pyNastran
+## Steven Doyle <mesheb82@gmail.com>
+## Al Danial    <al.danial@gmail.com>
+## 
+## This file is part of pyNastran.
+## 
+## pyNastran is free software: you can redistribute it and/or modify
+## it under the terms of the GNU Lesser General Public License as published by
+## the Free Software Foundation, either version 3 of the License, or
+## (at your option) any later version.
+## 
+## pyNastran is distributed in the hope that it will be useful,
+## but WITHOUT ANY WARRANTY; without even the implied warranty of
+## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+## GNU General Public License for more details.
+## 
+## You should have received a copy of the GNU Lesser General Public License
+## along with pyNastran.  If not, see <http://www.gnu.org/licenses/>.
+## 
 import sys
 import copy
 
@@ -19,7 +43,7 @@ class getMethods(object):
         
     def getNodes(self):
         nodes = []
-        for nid,node in sorted(self.nodes.iteritems()):
+        for nid,node in sorted(self.nodes.items()):
             nodes.append(node)
         return nodes
 
@@ -94,7 +118,7 @@ class getMethods(object):
                 nidToElementsMap[nid] = []
             ###
         ###
-        for eid,element in self.elements.iteritems(): # load the mapper
+        for eid,element in self.elements.items(): # load the mapper
             try:
                 nids = element.nodeIDs() # not supported for 0-D and 1-D elements
                 for nid in nids:  # (e.g. CQUAD8 with missing node)

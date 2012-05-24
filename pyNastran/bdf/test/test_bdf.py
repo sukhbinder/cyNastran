@@ -1,3 +1,27 @@
+## GNU Lesser General Public License
+## 
+## Program pyNastran - a python interface to NASTRAN files
+## Copyright (C) 2011-2012  Steven Doyle, Al Danial
+## 
+## Authors and copyright holders of pyNastran
+## Steven Doyle <mesheb82@gmail.com>
+## Al Danial    <al.danial@gmail.com>
+## 
+## This file is part of pyNastran.
+## 
+## pyNastran is free software: you can redistribute it and/or modify
+## it under the terms of the GNU Lesser General Public License as published by
+## the Free Software Foundation, either version 3 of the License, or
+## (at your option) any later version.
+## 
+## pyNastran is distributed in the hope that it will be useful,
+## but WITHOUT ANY WARRANTY; without even the implied warranty of
+## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+## GNU General Public License for more details.
+## 
+## You should have received a copy of the GNU Lesser General Public License
+## along with pyNastran.  If not, see <http://www.gnu.org/licenses/>.
+## 
 import os
 import sys
 import numpy
@@ -21,7 +45,7 @@ def runAllFilesInFolder(folder,debug=False,xref=True,check=True,cid=None):
     filenames2 = []
     diffCards = []
     for filename in filenames:
-        if filename.endswith('.bdf') or filename.endswith('.dat') or filename.endswith('.nas') or filename.endswith('.nas'):
+        if filename.endswith('.bdf') or filename.endswith('.dat') or filename.endswith('.nas'):
             filenames2.append(filename)
         ###
     ###
@@ -35,8 +59,6 @@ def runAllFilesInFolder(folder,debug=False,xref=True,check=True,cid=None):
         #except MissingFileError:
         #    pass
         #except TabCharacterError:
-        #    pass
-        #except TabCommaCharacterError:
         #    pass
         #except ScientificParseError:
         #    pass
@@ -76,10 +98,7 @@ def runBDF(folder,bdfFilename,debug=False,xref=True,check=True,cid=None,meshForm
     try:
         #print "xref = ",xref
         try:
-            if '.pch' in bdfModel:
-                fem1.readBDF_Punch(bdfModel,xref=False)
-            else:
-                fem1.readBDF(bdfModel,xref=xref)
+            fem1.readBDF(bdfModel,xref=xref)
         except:
             print "failed reading |%s|" %(bdfModel)
             raise
@@ -119,14 +138,12 @@ def runBDF(folder,bdfFilename,debug=False,xref=True,check=True,cid=None,meshForm
     #    pass
     #except TabCharacterError:
     #    pass
-    #except TabCommaCharacterError:
-    #    pass
     #except ScientificParseError:
+    #    pass
+    #except BDF_SyntaxError:
     #    pass
     #except ClosedBDFError:
     #    pass
-    except BDF_SyntaxError:
-        pass
     except SystemExit:
         sys.exit('sys.exit...')
     except:
@@ -223,7 +240,7 @@ def compute(cards1,cards2):
     ###
 
 def getElementStats(fem1,fem2):
-    for key,e in sorted(fem1.elements.iteritems()):
+    for key,e in sorted(fem1.elements.items()):
         try:
             if isinstance(e,ShellElement):
                 a   = e.Area()
@@ -234,7 +251,7 @@ def getElementStats(fem1,fem2):
                 c   = e.Centroid()
                 #mid = e.Mid()
                 pid = e.Pid()
-                n     = e.Normal()
+                n    = e.Normal()
                 a,c,n = e.AreaCentroidNormal()
                 
             elif isinstance(e,SolidElement):
@@ -278,7 +295,7 @@ def getElementStats(fem1,fem2):
                 ###
             ###
         except:
-            print "*stats - e.type=%s eid=%s  element=\n%s" %(e.type,e.eid,str(e))
+            print "*stats - e.type = ",e.type
             raise
         ###
     ###
@@ -296,7 +313,7 @@ def compareParams(fem1,fem2):
     compute(fem1.params,fem2.params)
 
 def printPoints(fem1,fem2):
-    for nid,n1 in sorted(fem1.nodes.iteritems()):
+    for nid,n1 in sorted(fem1.nodes.items()):
         print "%s   xyz=%s  n1=%s  n2=%s" %(nid,n1.xyz,n1.Position(True),  fem2.Node(nid).Position())
         break
     ###

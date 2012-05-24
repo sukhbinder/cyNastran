@@ -1,3 +1,27 @@
+## GNU Lesser General Public License
+## 
+## Program pyNastran - a python interface to NASTRAN files
+## Copyright (C) 2011-2012  Steven Doyle, Al Danial
+## 
+## Authors and copyright holders of pyNastran
+## Steven Doyle <mesheb82@gmail.com>
+## Al Danial    <al.danial@gmail.com>
+## 
+## This file is part of pyNastran.
+## 
+## pyNastran is free software: you can redistribute it and/or modify
+## it under the terms of the GNU Lesser General Public License as published by
+## the Free Software Foundation, either version 3 of the License, or
+## (at your option) any later version.
+## 
+## pyNastran is distributed in the hope that it will be useful,
+## but WITHOUT ANY WARRANTY; without even the implied warranty of
+## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+## GNU General Public License for more details.
+## 
+## You should have received a copy of the GNU Lesser General Public License
+## along with pyNastran.  If not, see <http://www.gnu.org/licenses/>.
+## 
 #import os
 
 import sys
@@ -45,16 +69,14 @@ class FortranFile(object):
             self.hasBuffer = True
             ints = self.readFullIntBlock()
             if debug and self.makeOp2Debug:
-                self.op2Debug.write('bufferBlock = |%s|\n' %(str(ints)))
+                self.op2Debug.write('bufferBlcok = |%s|\n' %(str(ints)))
             
         elif len(ints)==0:
             return None
         
-        if not(ints[0]==ints[2]==4):
-            msg  = "pyNastran reading failed because an improperly formatted (or unsupported) table is in the OP2.\n"
-            msg += "If you remove the offending table (make sure you're using PARAM,POST,-1 first) the code should work.\n"
-            msg += "header ints=(%s) expected=%s\n" %(str(ints[0:5]),expected)
-            raise InvalidMarkerError(msg)
+        assert ints[0]==ints[2]==4, "header ints=(%s) expected=%s\n" %(str(ints[0:5]),expected)
+        #if not(ints[0]==ints[2]==4):
+        #    raise InvalidMarkerError("header ints=(%s) expected=%s\n" %(str(ints[0:5]),expected))
         if debug and self.makeOp2Debug:
             self.op2Debug.write('[4,%s,4]\n' %(ints[1]))
         return ints[1]
