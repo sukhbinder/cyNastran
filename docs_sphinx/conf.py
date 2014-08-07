@@ -66,8 +66,8 @@ class Mock(object):
         else:
             return Mock()
 
-#for mod_name in MOCK_MODULES:
-    #sys.modules[mod_name] = Mock()
+for mod_name in MOCK_MODULES:
+    sys.modules[mod_name] = Mock()
 
 # -- General configuration -----------------------------------------------------
 
